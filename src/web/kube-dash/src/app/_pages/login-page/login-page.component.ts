@@ -88,8 +88,8 @@ export class LoginPageComponent {
     private router: Router,
     private route: ActivatedRoute
   ) {
-    // Get return url from route parameters or default to '/log'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/log';
+    // Get return url from route parameters or default to the dashboard
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
 
     // Redirect if already authenticated
     if (this.authService.isAuthenticated()) {

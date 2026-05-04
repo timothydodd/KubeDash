@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../auth-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SignalRService {
   private hubConnection?: signalR.HubConnection;
+  private auth = inject(AuthService);
 
   public clusterUpdate = new Subject<any>();
   public namespaceUpdate = new Subject<any>();
@@ -16,8 +18,23 @@ export class SignalRService {
   public eventUpdate = new Subject<any>();
 
   public startConnection() {
+    if (this.hubConnection) {
+      const state = this.hubConnection.state;
+      if (
+        state === signalR.HubConnectionState.Connected ||
+        state === signalR.HubConnectionState.Connecting ||
+        state === signalR.HubConnectionState.Reconnecting
+      ) {
+        return;
+      }
+    }
+    const token = this.auth.getToken();
+    if (!token) return; // not signed in yet
+
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.apiUrl}/kubernetes-hub`)
+      .withUrl(`${environment.apiUrl}/kubernetes-hub`, {
+        accessTokenFactory: () => this.auth.getToken() ?? '',
+      })
       .withAutomaticReconnect()
       .build();
 
@@ -26,12 +43,10 @@ export class SignalRService {
       .then(() => {
         console.log('Kubernetes hub connection started');
         this.addKubernetesListeners();
-        // Subscribe to default cluster
         this.subscribeToCluster('default');
       })
       .catch((err) => console.log('Error while starting connection: ' + err));
 
-    // Handle reconnection
     this.hubConnection.onreconnected(() => {
       console.log('Kubernetes hub reconnected');
       this.subscribeToCluster('default');
@@ -83,5 +98,6 @@ export class SignalRService {
 
   public stopConnection() {
     this.hubConnection?.stop();
+    this.hubConnection = undefined;
   }
 }

@@ -54,7 +54,11 @@ export class AppComponent implements OnInit {
   private signalRService = inject(SignalRService);
 
   ngOnInit() {
-    // Initialize SignalR connection for real-time updates
-    this.signalRService.startConnection();
+    // Connect to the cluster hub once we have a token; reconnect on subsequent
+    // logins, disconnect on logout.
+    this.auth.isLoggedIn.subscribe((loggedIn) => {
+      if (loggedIn) this.signalRService.startConnection();
+      else this.signalRService.stopConnection();
+    });
   }
 }

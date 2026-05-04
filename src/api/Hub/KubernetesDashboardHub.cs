@@ -1,8 +1,10 @@
 using KubeDashApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace KubeDashApi.Hubs;
 
+[Authorize]
 public class KubernetesDashboardHub : Hub
 {
     private readonly ClusterWatchManager _watchManager;

@@ -159,7 +159,7 @@ export class AuthService {
 
     const currentUrl = this.router.url;
     if (!currentUrl.startsWith('/login')) {
-      const returnUrl = currentUrl && currentUrl !== '/' ? currentUrl : '/log';
+      const returnUrl = currentUrl && currentUrl !== '/' ? currentUrl : '/dashboard';
       this.router.navigate(['/login'], { queryParams: { returnUrl } });
     }
   }
