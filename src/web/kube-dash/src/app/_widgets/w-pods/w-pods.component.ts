@@ -1,15 +1,23 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
+import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
 import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { Pod } from '../../_models/kubernetes.interfaces';
+import { environment } from '../../../environments/environment';
+
+interface LogCounts {
+  error: number;
+  warning: number;
+}
 
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LoadingSpinnerComponent, LucideAngularModule],
+  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink],
   template: `
     <div class="pods-widget">
       <div class="widget-header">
@@ -67,6 +75,8 @@ import { Pod } from '../../_models/kubernetes.interfaces';
                     <th>Memory</th>
                     <th>Node</th>
                     <th>Age</th>
+                    <th>24h Errors</th>
+                    <th>Logs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -133,6 +143,38 @@ import { Pod } from '../../_models/kubernetes.interfaces';
                           <span class="muted">-</span>
                         }
                       </td>
+                      <td class="counts-cell">
+                        @let counts = getCounts(pod);
+                        @if (counts) {
+                          <div class="counts-info">
+                            @if (counts.error > 0) {
+                              <span class="count-pill error" title="Errors in last 24h">
+                                <lucide-icon name="x-circle" /> {{ counts.error }}
+                              </span>
+                            }
+                            @if (counts.warning > 0) {
+                              <span class="count-pill warning" title="Warnings in last 24h">
+                                <lucide-icon name="alert-circle" /> {{ counts.warning }}
+                              </span>
+                            }
+                            @if (counts.error === 0 && counts.warning === 0) {
+                              <span class="count-pill ok" title="No errors/warnings in 24h">
+                                <lucide-icon name="check-circle" /> 0
+                              </span>
+                            }
+                          </div>
+                        } @else {
+                          <span class="muted">-</span>
+                        }
+                      </td>
+                      <td class="logs-cell">
+                        <a class="logs-btn"
+                           [routerLink]="['/logs']"
+                           [queryParams]="{ namespace: pod.metadata.namespace, pod: pod.metadata.name }"
+                           title="View logs">
+                          <lucide-icon name="server" />
+                        </a>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -149,10 +191,17 @@ export class WPodsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private kubernetesApi = inject(KubernetesApiService);
   private signalRService = inject(SignalRService);
+  private http = inject(HttpClient);
 
   loading = signal(true);
   error = signal<string | null>(null);
   pods = signal<Pod[]>([]);
+  countsMap = signal<Record<string, LogCounts>>({});
+
+  getCounts(pod: Pod): LogCounts | null {
+    const key = `${pod.metadata.namespace}/${pod.metadata.name}`;
+    return this.countsMap()[key] ?? null;
+  }
 
   // Computed properties for statistics
   runningCount = computed(() => 
@@ -188,12 +237,37 @@ export class WPodsComponent implements OnInit, OnDestroy {
         next: (pods) => {
           this.pods.set(pods);
           this.loading.set(false);
+          this.loadCounts(pods);
         },
         error: (err) => {
           this.error.set(err.message || 'Failed to load pods');
           this.loading.set(false);
         },
       });
+  }
+
+  private loadCounts(pods: Pod[]) {
+    const requests = pods
+      .filter((p) => p.status?.phase === 'Running' || p.status?.phase === 'Failed')
+      .map((p) => {
+        const ns = p.metadata.namespace;
+        const name = p.metadata.name;
+        const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns ?? '')}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
+        return this.http.get<LogCounts>(url).pipe(
+          catchError(() => of({ error: 0, warning: 0 })),
+        );
+      });
+    if (requests.length === 0) return;
+
+    forkJoin(requests).pipe(takeUntil(this.destroy$)).subscribe((results) => {
+      const map: Record<string, LogCounts> = { ...this.countsMap() };
+      const eligible = pods.filter((p) => p.status?.phase === 'Running' || p.status?.phase === 'Failed');
+      eligible.forEach((p, i) => {
+        const key = `${p.metadata.namespace}/${p.metadata.name}`;
+        map[key] = results[i];
+      });
+      this.countsMap.set(map);
+    });
   }
 
   private setupSignalRSubscriptions() {

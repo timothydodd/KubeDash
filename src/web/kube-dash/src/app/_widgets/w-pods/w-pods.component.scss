@@ -291,6 +291,56 @@
   }
 }
 
+.counts-cell {
+  .counts-info {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid currentColor;
+    background: rgba(0, 0, 0, 0.15);
+
+    lucide-icon { width: 12px; height: 12px; }
+
+    &.error   { color: #ff5555; }
+    &.warning { color: #f1fa8c; }
+    &.ok      { color: var(--k8s-running, #50fa7b); opacity: 0.7; }
+  }
+}
+
+.logs-cell {
+  .logs-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--on-surface-variant, var(--foreground-secondary));
+    background: transparent;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    lucide-icon { width: 14px; height: 14px; }
+
+    &:hover {
+      color: var(--primary, #bd93f9);
+      border-color: currentColor;
+      background: rgba(189, 147, 249, 0.1);
+    }
+  }
+}
+
 .node-info, .container-info, .age-info, .resource-info {
   display: flex;
   align-items: center;

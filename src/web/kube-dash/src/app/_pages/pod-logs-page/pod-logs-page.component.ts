@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -143,6 +144,7 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private signalr = inject(SignalRService);
+  private route = inject(ActivatedRoute);
 
   pods = signal<PodInfo[]>([]);
   selectedNamespace = signal<string>('');
@@ -259,9 +261,25 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
 
   private loadPods() {
     this.http.get<PodInfo[]>(`${environment.apiUrl}/api/log/pods`).subscribe({
-      next: (pods) => this.pods.set(pods),
+      next: (pods) => {
+        this.pods.set(pods);
+        this.applyQueryParams();
+      },
       error: (err) => this.error.set(err?.error?.error || 'Failed to load pod list'),
     });
+  }
+
+  private applyQueryParams() {
+    const params = this.route.snapshot.queryParamMap;
+    const ns = params.get('namespace');
+    const name = params.get('pod');
+    if (!name) return;
+    const match = this.pods().find((p) => p.name === name && (!ns || p.namespace === ns));
+    if (match) {
+      if (ns) this.selectedNamespace.set(ns);
+      this.selectedPod.set(match);
+      this.onPodChange();
+    }
   }
 
   onNamespaceChange() {
