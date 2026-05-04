@@ -129,7 +129,7 @@ const TIME_RANGES: TimeRange[] = [
             } @else {
               <div class="log-line" [attr.data-level]="row.log.logLevel.toLowerCase()">
                 <span class="ts">{{ formatTs(row.log.timeStamp) }}</span>
-                <span class="lvl">{{ row.log.logLevel }}</span>
+                <span class="lvl">{{ shortLevel(row.log.logLevel) }}</span>
                 <span class="msg" [innerHTML]="row.log.line | highlightLog: search()"></span>
               </div>
             }
@@ -356,6 +356,17 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   reload() {
     const pod = this.selectedPod();
     if (pod) this.fetchTail(pod);
+  }
+
+  shortLevel(level: string): string {
+    switch (level) {
+      case 'Error': return 'ERR';
+      case 'Warning': return 'WARN';
+      case 'Information': return 'INFO';
+      case 'Debug': return 'DEBUG';
+      case 'Trace': return 'TRACE';
+      default: return level.toUpperCase().slice(0, 5);
+    }
   }
 
   formatTs(d: Date | string) {
