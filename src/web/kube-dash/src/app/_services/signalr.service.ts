@@ -16,6 +16,18 @@ export class SignalRService implements OnDestroy {
   public connected$ = new BehaviorSubject<boolean>(false);
 
   public startConnection(token: string): Promise<void> {
+    // If we already have a live connection (or one in flight) for the same token, reuse it.
+    if (this.currentToken === token && this.hubConnection) {
+      const state = this.hubConnection.state;
+      if (
+        state === signalR.HubConnectionState.Connected ||
+        state === signalR.HubConnectionState.Connecting ||
+        state === signalR.HubConnectionState.Reconnecting
+      ) {
+        return this.startPromise ?? Promise.resolve();
+      }
+    }
+
     this.currentToken = token;
     this.disconnect();
 
@@ -78,9 +90,12 @@ export class SignalRService implements OnDestroy {
 
   private setupConnectionHandlers(): void {
     if (!this.hubConnection) return;
+    // Note: withAutomaticReconnect handles transient reconnect attempts. We only
+    // schedule a manual restart if the underlying connection has fully terminated.
     this.hubConnection.onclose((error) => {
       console.warn('SignalR closed:', error);
       this.connected$.next(false);
+      this.startPromise = undefined;
       this.scheduleReconnection();
     });
     this.hubConnection.onreconnecting((error) => {
@@ -94,7 +109,10 @@ export class SignalRService implements OnDestroy {
   }
 
   private scheduleReconnection(): void {
+    // Only schedule a manual restart if no connection or it's fully Disconnected.
     if (this.reconnectTimer || !this.currentToken) return;
+    const state = this.hubConnection?.state;
+    if (state && state !== signalR.HubConnectionState.Disconnected) return;
     this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.currentToken) this.startConnection(this.currentToken);
