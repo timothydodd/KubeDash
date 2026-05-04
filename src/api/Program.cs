@@ -1,4 +1,5 @@
-﻿using KubeDashApi.Hubs;
+using KubeDashApi.Data;
+using KubeDashApi.Hubs;
 using KubeDashApi.Middleware;
 
 namespace KubeDashApi;
@@ -10,10 +11,9 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         var config = builder.Configuration;
-        var env = builder.Environment;
-        ILogger logger = LoggerFactory.Create(builder =>
+        ILogger logger = LoggerFactory.Create(b =>
         {
-            builder.AddSimpleConsole(c =>
+            b.AddSimpleConsole(c =>
             {
                 c.SingleLine = true;
                 c.IncludeScopes = false;
@@ -21,24 +21,28 @@ public class Program
             });
         }).CreateLogger("PreHost");
 
-
-        // Add core services
         builder.Services.AddControllers();
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         builder.Services.AddMemoryCache();
         builder.Services.AddHttpLogging(_ => { });
         builder.Services.AddSignalR();
 
-        // Add modular service groups
         builder.Services
             .AddCorsPolicy(config, logger)
             .AddBackgroundServices()
             .AddCompressionAndCaching()
+            .AddPersistence(config)
+            .AddAuth(config)
             .AddApplicationServices(config);
 
-
-
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbInit = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+            dbInit.CreateTable();
+        }
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -48,26 +52,19 @@ public class Program
             app.UseMiddleware<GlobalExceptionMiddleware>();
         }
 
-
-
-
-        // Configure the HTTP request pipeline.
-
         app.UseCors("Origins");
         app.UseResponseCaching();
         app.UseResponseCompression();
         app.UseRouting();
-        //    app.UseAuthorization();
+        app.UseRateLimiter();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseStaticFiles();
         app.UseDefaultFiles();
 
         app.MapControllers();
-
         app.MapFallbackToFile("/index.html");
         app.MapHub<KubernetesDashboardHub>("/kubernetes-hub");
-
-
-
 
         app.Run();
     }

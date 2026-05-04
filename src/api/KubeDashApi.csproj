@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <UserSecretsId>7940a0e8-c67b-468f-9855-e5b5e87abb6d</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <LangVersion>11</LangVersion>
+    <LangVersion>13</LangVersion>
     <SpaRoot>..\web\kube-dash</SpaRoot>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>http://localhost:4200</SpaProxyServerUrl>
@@ -17,16 +17,18 @@
     <ProjectReference Include="..\web\kube-dash\kube-dash.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\RoboDodd.OrmLite\src\RoboDodd.OrmLite\RoboDodd.OrmLite.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="KubernetesClient" Version="17.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>9.0.7</Version>
-    </PackageReference>
-    <PackageReference Include="System.Text.Json" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <PackageReference Include="Dapper" Version="2.1.72" />
   </ItemGroup>
-
 
 </Project>

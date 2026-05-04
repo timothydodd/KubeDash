@@ -1,14 +1,19 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
+using System.Text;
 using k8s;
 using KubeDashApi.Common;
+using KubeDashApi.Data;
 using KubeDashApi.Hubs;
 using KubeDashApi.Services;
 using KubeDashApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.IdentityModel.Tokens;
+using RoboDodd.OrmLite;
 
 public static class ServiceCollectionExtensions
 {
-
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration config, ILogger logger)
     {
         var origins = config.GetValue<string>("AllowedOrigins")?.Split(',');
@@ -27,17 +32,22 @@ public static class ServiceCollectionExtensions
                 }
                 else
                 {
-                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                    policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
                 }
             });
         });
         return services;
     }
+
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
         services.AddHostedService<MessageWorker>();
         return services;
     }
+
     public static IServiceCollection AddCompressionAndCaching(this IServiceCollection services)
     {
         services.AddRequestDecompression();
@@ -46,26 +56,20 @@ public static class ServiceCollectionExtensions
         {
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
-            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-            {
-            "application/json"
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
         });
-        });
-        services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
-
-        services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
-
+        services.Configure<GzipCompressionProviderOptions>(o => o.Level = CompressionLevel.Fastest);
+        services.Configure<BrotliCompressionProviderOptions>(o => o.Level = CompressionLevel.Optimal);
         return services;
     }
+
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
     {
-        // Kubernetes configuration
         var kconfig = KubernetesClientConfiguration.BuildDefaultConfig();
-        services.AddSingleton<IKubernetes>(sp => new Kubernetes(kconfig));
+        services.AddSingleton<IKubernetes>(_ => new Kubernetes(kconfig));
 
-        // Service registrations
         services.AddSingleton<KubernetesService>();
-        services.AddSingleton<IKubernetesService>(provider => provider.GetRequiredService<KubernetesService>());
+        services.AddSingleton<IKubernetesService>(p => p.GetRequiredService<KubernetesService>());
 
         services.AddSingleton<TimedCache>();
         services.AddSingleton<KubernetesDashboardHubService>();
@@ -81,6 +85,79 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
+    }
 
+    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration config)
+    {
+        var connectionString = config.GetConnectionString("DefaultConnection")
+            ?? "Data Source=kubedash.db";
+
+        var dbFactory = new DbConnectionFactory(connectionString, DatabaseProvider.SQLite);
+        services.AddSingleton(dbFactory);
+        services.AddSingleton<DatabaseInitializer>();
+        return services;
+    }
+
+    public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddSingleton<PasswordService>();
+        services.AddSingleton<AuthService>();
+        services.AddScoped<RefreshTokenService>();
+
+        var jwt = config.GetSection("JwtSettings");
+        var secret = jwt["Secret"] ?? throw new InvalidOperationException("JwtSettings:Secret not configured");
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwt["Issuer"],
+                ValidAudience = jwt["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = ctx =>
+                {
+                    var token = ctx.Request.Query["access_token"];
+                    var path = ctx.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(token) &&
+                        (path.StartsWithSegments("/kubernetes-hub") || path.StartsWithSegments("/podloghub")))
+                    {
+                        ctx.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
+
+        services.AddAuthorization();
+
+        services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("AuthPolicy", lo =>
+            {
+                lo.PermitLimit = 5;
+                lo.Window = TimeSpan.FromMinutes(1);
+                lo.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                lo.QueueLimit = 2;
+            });
+            options.OnRejected = async (ctx, token) =>
+            {
+                ctx.HttpContext.Response.StatusCode = 429;
+                await ctx.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", token);
+            };
+        });
+
+        return services;
     }
 }

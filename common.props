@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <LangVersion>10</LangVersion>
+    <LangVersion>13</LangVersion>
     <NoWarn>$(NoWarn);CS1591;IDE0058;</NoWarn>
     <!--
       https://github.com/dotnet/roslyn-analyzers/issues/5628
