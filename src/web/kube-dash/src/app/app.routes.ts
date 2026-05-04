@@ -18,7 +18,7 @@ export const routes: Routes = [
   },
   {
     path: 'logs',
-    loadComponent: () => import('./_pages/main-log-page/main-log-page.component').then((m) => m.MainLogPageComponent),
+    loadComponent: () => import('./_pages/pod-logs-page/pod-logs-page.component').then((m) => m.PodLogsPageComponent),
     canActivate: [authGuard],
   },
 ];
