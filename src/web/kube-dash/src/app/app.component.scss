@@ -1,6 +1,6 @@
 .app-container {
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -11,13 +11,10 @@
 .content-wrapper {
   min-height: 100vh;
   width: 100%;
-  max-width: 1920px; // Limit width for ultra-wide monitors
+  max-width: 1920px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   margin: 0;
-  box-shadow: none;
-  border: none;
 }
 
 .app-header {
@@ -51,26 +48,8 @@
 
 .app-main {
   flex: 1;
-  overflow: auto;
   background: transparent;
   padding: 0;
-  
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: var(--surface);
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: var(--foreground-muted);
-    border-radius: 5px;
-    
-    &:hover {
-      background: var(--foreground-secondary);
-    }
-  }
 }
 
 // Responsive adjustments

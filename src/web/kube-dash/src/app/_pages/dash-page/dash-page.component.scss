@@ -1,12 +1,12 @@
 .dashboard-container {
   padding: 24px;
-  min-height: calc(100vh - 60px); // Account for header
   display: flex;
   flex-direction: column;
   gap: 24px;
   max-width: 1920px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
   
   // Add subtle background pattern for ultra-wide monitors
   @media (min-width: 2560px) {
@@ -54,54 +54,23 @@
     
     &.pods-row {
       grid-template-columns: 1fr;
-      
+
       .pods-widget {
-        min-height: 400px;
-        max-height: 600px;
-      }
-    }
-    
-    &.nodes-row {
-      grid-template-columns: 1fr;
-      
-      .nodes-widget {
-        min-height: 350px;
-      }
-    }
-  }
-  
-  // Tablet layout
-  &.tablet {
-    gap: 20px;
-    
-    .widget-row {
-      &.pods-row .pods-widget {
-        max-height: 500px;
-      }
-    }
-  }
-  
-  // Mobile layout
-  &.mobile {
-    gap: 16px;
-    
-    .widget-row {
-      gap: 16px;
-      
-      &.stats-row .cluster-widget {
         height: auto;
       }
-      
-      &.pods-row .pods-widget {
-        min-height: 300px;
-        max-height: 400px;
-      }
-      
-      &.nodes-row .nodes-widget {
-        min-height: 300px;
+    }
+
+    &.nodes-row {
+      grid-template-columns: 1fr;
+
+      .nodes-widget {
+        height: auto;
       }
     }
   }
+
+  &.tablet { gap: 20px; }
+  &.mobile { gap: 16px; }
 }
 
 // Widget styling
@@ -136,16 +105,7 @@
     }
     
     &:hover {
-      background: var(--widget-background-hover);
       border-color: var(--border-color-hover);
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 
-        0 20px 48px rgba(0, 0, 0, 0.4),
-        0 1px 0 rgba(255, 255, 255, 0.2) inset;
-      
-      &::before {
-        opacity: 1;
-      }
     }
   }
   
