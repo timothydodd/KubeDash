@@ -112,15 +112,15 @@ $darkBack: #191a21;
   --accent-pink: #ec4899;
   
   // UI colors
-  --border-color: rgba(148, 163, 184, 0.2);
-  --border-color-hover: rgba(148, 163, 184, 0.3);
+  --border-color: #44475a;
+  --border-color-hover: #565872;
   --glass-bg: rgba(30, 36, 51, 0.8);
   --glass-bg-hover: rgba(42, 52, 65, 0.9);
   
   // Widget backgrounds
-  --widget-background: rgba(30, 36, 51, 0.6);
-  --widget-background-hover: rgba(42, 52, 65, 0.8);
-  --widget-border: rgba(148, 163, 184, 0.15);
+  --widget-background: var(--surface);
+  --widget-background-hover: var(--surface-variant);
+  --widget-border: #44475a;
   
   // Legacy compatibility
   --current-line: var(--surface);

@@ -245,10 +245,12 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     this.loadPods();
     const token = this.auth.getToken();
     if (token) {
-      this.signalr.startConnection(token);
-      this.connected.set(true);
+      this.signalr.startConnection(token).catch(() => { /* surfaced via connected$ */ });
     }
     this.subs = this.signalr.logsReceived.subscribe((batch) => this.appendLogs(batch));
+    this.subs.add(
+      this.signalr.connected$.subscribe((c) => this.connected.set(c)),
+    );
   }
 
   ngOnDestroy() {
@@ -298,7 +300,7 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     if (!pod) return;
     this.error.set(null);
     this.fetchTail(pod);
-    this.signalr.subscribeToPod(pod.namespace, pod.name)?.catch((err) => {
+    this.signalr.subscribeToPod(pod.namespace, pod.name).catch((err) => {
       this.error.set('Failed to subscribe to pod stream: ' + (err?.message || err));
     });
   }

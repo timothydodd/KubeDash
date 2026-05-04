@@ -11,10 +11,7 @@
   flex-direction: column;
   
   &:hover {
-    background: var(--widget-background-hover);
     border-color: var(--border-color-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
 }
 

@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -10,10 +10,12 @@ export class SignalRService implements OnDestroy {
   private hubConnection?: signalR.HubConnection;
   private reconnectTimer?: number;
   private currentToken?: string;
+  private startPromise?: Promise<void>;
 
   public logsReceived = new Subject<Log[]>();
+  public connected$ = new BehaviorSubject<boolean>(false);
 
-  public startConnection(token: string) {
+  public startConnection(token: string): Promise<void> {
     this.currentToken = token;
     this.disconnect();
 
@@ -26,16 +28,30 @@ export class SignalRService implements OnDestroy {
 
     this.setupConnectionHandlers();
 
-    this.hubConnection
+    this.startPromise = this.hubConnection
       .start()
       .then(() => {
         console.log('SignalR connection started successfully');
         this.addTransferLogDataListener();
+        this.connected$.next(true);
       })
       .catch((err) => {
         console.error('Error while starting SignalR connection:', err);
+        this.connected$.next(false);
         this.scheduleReconnection();
+        throw err;
       });
+    return this.startPromise;
+  }
+
+  public async ensureConnected(): Promise<void> {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) return;
+    if (this.startPromise) {
+      try { await this.startPromise; } catch { /* ignore, fall through */ }
+    }
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+      throw new Error('SignalR connection not available');
+    }
   }
 
   public disconnect(): void {
@@ -49,22 +65,31 @@ export class SignalRService implements OnDestroy {
     }
   }
 
-  public subscribeToPod(namespace: string, podName: string) {
-    return this.hubConnection?.invoke('SubscribeToPod', namespace, podName);
+  public async subscribeToPod(namespace: string, podName: string) {
+    await this.ensureConnected();
+    return this.hubConnection!.invoke('SubscribeToPod', namespace, podName);
   }
 
-  public unsubscribeFromPod(namespace: string, podName: string) {
-    return this.hubConnection?.invoke('UnsubscribeFromPod', namespace, podName);
+  public async unsubscribeFromPod(namespace: string, podName: string) {
+    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) return;
+    return this.hubConnection.invoke('UnsubscribeFromPod', namespace, podName);
   }
 
   private setupConnectionHandlers(): void {
     if (!this.hubConnection) return;
     this.hubConnection.onclose((error) => {
       console.warn('SignalR closed:', error);
+      this.connected$.next(false);
       this.scheduleReconnection();
     });
-    this.hubConnection.onreconnecting((error) => console.log('SignalR reconnecting:', error));
-    this.hubConnection.onreconnected(() => this.addTransferLogDataListener());
+    this.hubConnection.onreconnecting((error) => {
+      console.log('SignalR reconnecting:', error);
+      this.connected$.next(false);
+    });
+    this.hubConnection.onreconnected(() => {
+      this.addTransferLogDataListener();
+      this.connected$.next(true);
+    });
   }
 
   private scheduleReconnection(): void {
