@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
+import { SelectComponent } from '@rd-ui';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
 import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
@@ -14,10 +16,21 @@ interface LogCounts {
   warning: number;
 }
 
+type SortKey = 'name' | 'namespace' | 'status' | 'cpu' | 'memory' | 'age' | 'errors';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_FILTERS = [
+  { label: 'All statuses', value: '' },
+  { label: 'Running', value: 'Running' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Failed', value: 'Failed' },
+  { label: 'Succeeded', value: 'Succeeded' },
+];
+
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink],
+  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent],
   template: `
     <div class="pods-widget">
       <div class="widget-header">
@@ -57,30 +70,73 @@ interface LogCounts {
         </div>
       } @else {
         <div class="pods-content">
-          @if (pods().length === 0) {
+          <div class="pods-toolbar">
+            <div class="search">
+              <lucide-icon name="search" />
+              <input type="text"
+                     [(ngModel)]="searchText"
+                     placeholder="Search pods..."
+                     aria-label="Search pods" />
+            </div>
+            <rd-select
+              [items]="namespaceOptions()"
+              [searchable]="true"
+              searchPlaceholder="Search..."
+              placeholder="All namespaces"
+              [minWidth]="160"
+              size="compact"
+              [ngModel]="selectedNamespace()"
+              (ngModelChange)="selectedNamespace.set($event)"
+            ></rd-select>
+            <rd-select
+              [items]="statusOptions"
+              placeholder="All statuses"
+              [minWidth]="140"
+              size="compact"
+              [ngModel]="selectedStatus()"
+              (ngModelChange)="selectedStatus.set($event)"
+            ></rd-select>
+            <span class="result-count">{{ filteredPods().length }} of {{ pods().length }}</span>
+          </div>
+
+          @if (filteredPods().length === 0) {
             <div class="empty-state">
               <lucide-icon name="package" />
-              <p>No pods found</p>
+              <p>{{ pods().length === 0 ? 'No pods found' : 'No pods match the current filters' }}</p>
             </div>
           } @else {
             <div class="pods-table-container">
               <table class="pods-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Namespace</th>
-                    <th>Status</th>
+                    <th class="sortable" (click)="setSort('name')">
+                      Name {{ sortIndicator('name') }}
+                    </th>
+                    <th class="sortable" (click)="setSort('namespace')">
+                      Namespace {{ sortIndicator('namespace') }}
+                    </th>
+                    <th class="sortable" (click)="setSort('status')">
+                      Status {{ sortIndicator('status') }}
+                    </th>
                     <th>Ready</th>
-                    <th>CPU</th>
-                    <th>Memory</th>
+                    <th class="sortable" (click)="setSort('cpu')">
+                      CPU {{ sortIndicator('cpu') }}
+                    </th>
+                    <th class="sortable" (click)="setSort('memory')">
+                      Memory {{ sortIndicator('memory') }}
+                    </th>
                     <th>Node</th>
-                    <th>Age</th>
-                    <th>24h Errors</th>
+                    <th class="sortable" (click)="setSort('age')">
+                      Age {{ sortIndicator('age') }}
+                    </th>
+                    <th class="sortable" (click)="setSort('errors')">
+                      24h Errors {{ sortIndicator('errors') }}
+                    </th>
                     <th>Logs</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (pod of pods(); track pod.metadata.name) {
+                  @for (pod of filteredPods(); track pod.metadata.namespace + '/' + pod.metadata.name) {
                     <tr class="pod-row" [class]="getPodStatusClass(pod)">
                       <td class="pod-name-cell">
                         <span class="pod-name">{{ pod.metadata.name }}</span>
@@ -197,6 +253,80 @@ export class WPodsComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   pods = signal<Pod[]>([]);
   countsMap = signal<Record<string, LogCounts>>({});
+
+  // Filters / sort state
+  searchText = signal<string>('');
+  selectedNamespace = signal<string>('');
+  selectedStatus = signal<string>('');
+  sortKey = signal<SortKey>('name');
+  sortDir = signal<SortDir>('asc');
+
+  readonly statusOptions = STATUS_FILTERS;
+
+  namespaceOptions = computed(() => {
+    const set = new Set<string>();
+    this.pods().forEach((p) => p.metadata.namespace && set.add(p.metadata.namespace));
+    const opts = Array.from(set).sort().map((ns) => ({ label: ns, value: ns }));
+    return [{ label: 'All namespaces', value: '' }, ...opts];
+  });
+
+  filteredPods = computed(() => {
+    const q = this.searchText().trim().toLowerCase();
+    const ns = this.selectedNamespace();
+    const status = this.selectedStatus();
+    let list = this.pods().filter((p) => {
+      if (ns && p.metadata.namespace !== ns) return false;
+      if (status && p.status?.phase !== status) return false;
+      if (q) {
+        const hay = `${p.metadata.name ?? ''} ${p.metadata.namespace ?? ''} ${p.spec?.nodeName ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    const key = this.sortKey();
+    const dir = this.sortDir() === 'asc' ? 1 : -1;
+    list = [...list].sort((a, b) => this.compare(a, b, key) * dir);
+    return list;
+  });
+
+  setSort(key: SortKey) {
+    if (this.sortKey() === key) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set(key === 'cpu' || key === 'memory' || key === 'errors' || key === 'age' ? 'desc' : 'asc');
+    }
+  }
+
+  sortIndicator(key: SortKey): string {
+    if (this.sortKey() !== key) return '';
+    return this.sortDir() === 'asc' ? '▲' : '▼';
+  }
+
+  private compare(a: Pod, b: Pod, key: SortKey): number {
+    switch (key) {
+      case 'name':
+        return (a.metadata.name ?? '').localeCompare(b.metadata.name ?? '');
+      case 'namespace':
+        return (a.metadata.namespace ?? '').localeCompare(b.metadata.namespace ?? '');
+      case 'status':
+        return (a.status?.phase ?? '').localeCompare(b.status?.phase ?? '');
+      case 'cpu':
+        return (a.metrics?.cpuPercent ?? -1) - (b.metrics?.cpuPercent ?? -1);
+      case 'memory':
+        return (a.metrics?.memoryPercent ?? a.metrics?.memory ?? -1) -
+               (b.metrics?.memoryPercent ?? b.metrics?.memory ?? -1);
+      case 'age':
+        return new Date(a.metadata.creationTimestamp ?? 0).getTime() -
+               new Date(b.metadata.creationTimestamp ?? 0).getTime();
+      case 'errors': {
+        const ac = this.getCounts(a)?.error ?? -1;
+        const bc = this.getCounts(b)?.error ?? -1;
+        return ac - bc;
+      }
+    }
+  }
 
   getCounts(pod: Pod): LogCounts | null {
     const key = `${pod.metadata.namespace}/${pod.metadata.name}`;

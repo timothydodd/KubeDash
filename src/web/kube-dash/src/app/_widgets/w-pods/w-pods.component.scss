@@ -121,6 +121,59 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.pods-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .search {
+    position: relative;
+    flex: 1 1 220px;
+    max-width: 360px;
+
+    lucide-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--on-surface-muted, var(--foreground-secondary));
+      pointer-events: none;
+    }
+
+    input {
+      width: 100%;
+      height: 32px;
+      padding: 0 10px 0 32px;
+      background: var(--input-bg, var(--surface-variant));
+      color: var(--on-surface, var(--foreground));
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+
+      &:focus { border-color: var(--primary, #bd93f9); }
+    }
+  }
+
+  .result-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--on-surface-muted, var(--foreground-secondary));
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.pods-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  &:hover { color: var(--on-surface, var(--foreground)); }
 }
 
 .pods-table-container {
