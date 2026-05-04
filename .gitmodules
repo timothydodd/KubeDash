@@ -1,0 +1,6 @@
+[submodule "src/web/kube-dash/src/rd-ui"]
+	path = src/web/kube-dash/src/rd-ui
+	url = https://github.com/timothydodd/rd-ui.git
+[submodule "src/RoboDodd.OrmLite"]
+	path = src/RoboDodd.OrmLite
+	url = https://github.com/timothydodd/RoboDodd.OrmLite
