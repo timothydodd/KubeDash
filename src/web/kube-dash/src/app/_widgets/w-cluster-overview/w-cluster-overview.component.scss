@@ -70,9 +70,20 @@
   }
 }
 
-.cluster-summary {
+.cluster-body {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cluster-summary {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 
   .meter {

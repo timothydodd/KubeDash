@@ -37,26 +37,27 @@
       </button>
     </div>
   } @else if (cluster()) {
-    <div class="cluster-summary">
-      <div class="meter">
-        <div class="meter-head">
-          <span><lucide-icon name="cpu" /> CPU</span>
-          <span class="meter-value">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</span>
+    <div class="cluster-body">
+      <div class="cluster-summary">
+        <div class="meter">
+          <div class="meter-head">
+            <span><lucide-icon name="cpu" /> CPU</span>
+            <span class="meter-value">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill cpu" [style.width.%]="cpuUsagePercent()"></div></div>
         </div>
-        <div class="bar-track"><div class="bar-fill cpu" [style.width.%]="cpuUsagePercent()"></div></div>
-      </div>
-      <div class="meter">
-        <div class="meter-head">
-          <span><lucide-icon name="memory-stick" /> Memory</span>
-          <span class="meter-value">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</span>
+        <div class="meter">
+          <div class="meter-head">
+            <span><lucide-icon name="memory-stick" /> Memory</span>
+            <span class="meter-value">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill mem" [style.width.%]="memoryUsagePercent()"></div></div>
         </div>
-        <div class="bar-track"><div class="bar-fill mem" [style.width.%]="memoryUsagePercent()"></div></div>
       </div>
-    </div>
 
-    @if (cluster()!.nodes?.length) {
-      <div class="nodes-grid">
-        @for (n of cluster()!.nodes; track n.name) {
+      @if (cluster()!.nodes?.length) {
+        <div class="nodes-grid">
+          @for (n of cluster()!.nodes; track n.name) {
           <div class="node-card">
             <div class="node-card-head">
               <lucide-icon name="server" />
@@ -79,8 +80,9 @@
               <div class="bar-track small"><div class="bar-fill mem" [style.width.%]="round(n.memoryPercentage)"></div></div>
             </div>
           </div>
-        }
-      </div>
-    }
+          }
+        </div>
+      }
+    </div>
   }
 </div>
