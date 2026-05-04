@@ -6,6 +6,17 @@ import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../_services/auth-service';
 import { Log, SignalRService } from '../../_services/signalr.service';
+import { HighlightLogPipe } from '../main-log-page/_services/highlight.directive';
+
+interface LogRow {
+  kind: 'log';
+  log: Log;
+}
+interface DateRow {
+  kind: 'date';
+  label: string;
+}
+type FeedRow = LogRow | DateRow;
 
 interface PodInfo {
   name: string;
@@ -17,7 +28,7 @@ interface PodInfo {
 @Component({
   selector: 'app-pod-logs-page',
   standalone: true,
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, HighlightLogPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './pod-logs-page.component.scss',
   template: `
@@ -64,7 +75,7 @@ interface PodInfo {
       }
 
       <div class="log-stream">
-        @if (visibleLogs().length === 0) {
+        @if (feed().length === 0) {
           <div class="empty">
             @if (selectedPod()) {
               <span>Waiting for log output…</span>
@@ -73,12 +84,16 @@ interface PodInfo {
             }
           </div>
         } @else {
-          @for (log of visibleLogs(); track log.id) {
-            <div class="log-line" [attr.data-level]="log.logLevel.toLowerCase()">
-              <span class="ts">{{ formatTs(log.timeStamp) }}</span>
-              <span class="lvl">{{ log.logLevel }}</span>
-              <span class="msg">{{ log.line }}</span>
-            </div>
+          @for (row of feed(); track $index) {
+            @if (row.kind === 'date') {
+              <div class="date-divider"><span>{{ row.label }}</span></div>
+            } @else {
+              <div class="log-line" [attr.data-level]="row.log.logLevel.toLowerCase()">
+                <span class="ts">{{ formatTs(row.log.timeStamp) }}</span>
+                <span class="lvl">{{ row.log.logLevel }}</span>
+                <span class="msg" [innerHTML]="row.log.line | highlightLog: search()"></span>
+              </div>
+            }
           }
         }
       </div>
@@ -117,6 +132,31 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     if (!q) return this.logs();
     return this.logs().filter((l) => l.line.toLowerCase().includes(q));
   });
+
+  feed = computed<FeedRow[]>(() => {
+    const rows: FeedRow[] = [];
+    let lastDay = '';
+    for (const log of this.visibleLogs()) {
+      const d = log.timeStamp instanceof Date ? log.timeStamp : new Date(log.timeStamp as any);
+      const dayKey = d.toDateString();
+      if (dayKey !== lastDay) {
+        rows.push({ kind: 'date', label: this.formatDateLabel(d) });
+        lastDay = dayKey;
+      }
+      rows.push({ kind: 'log', log });
+    }
+    return rows;
+  });
+
+  private formatDateLabel(d: Date): string {
+    const now = new Date();
+    const today = now.toDateString();
+    const yesterday = new Date(now.getTime() - 86400_000).toDateString();
+    const key = d.toDateString();
+    if (key === today) return `Today · ${d.toLocaleDateString()}`;
+    if (key === yesterday) return `Yesterday · ${d.toLocaleDateString()}`;
+    return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
 
   constructor() {
     effect(() => {
