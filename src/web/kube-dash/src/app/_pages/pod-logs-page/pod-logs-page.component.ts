@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { SelectComponent } from '@rd-ui';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../_services/auth-service';
@@ -45,52 +46,48 @@ const TIME_RANGES: TimeRange[] = [
 @Component({
   selector: 'app-pod-logs-page',
   standalone: true,
-  imports: [FormsModule, LucideAngularModule, HighlightLogPipe],
+  imports: [FormsModule, LucideAngularModule, HighlightLogPipe, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './pod-logs-page.component.scss',
   template: `
     <div class="pod-logs-page">
       <div class="toolbar">
-        <div class="control">
-          <label>Namespace</label>
-          <select [(ngModel)]="selectedNamespace" (ngModelChange)="onNamespaceChange()">
-            <option value="">All</option>
-            @for (ns of namespaces(); track ns) {
-              <option [value]="ns">{{ ns }}</option>
-            }
-          </select>
-        </div>
         <div class="control flex-grow">
           <label>Pod</label>
-          <select [(ngModel)]="selectedPod" (ngModelChange)="onPodChange()">
-            <option [ngValue]="null">-- Select a pod --</option>
-            @for (p of filteredPods(); track p.namespace + '/' + p.name) {
-              <option [ngValue]="p">{{ p.namespace }} / {{ p.name }}</option>
-            }
-          </select>
+          <rd-select
+            [items]="podOptions()"
+            [searchable]="true"
+            searchPlaceholder="Search pods..."
+            placeholder="Select a pod"
+            [minWidth]="240"
+            size="compact"
+            [ngModel]="selectedPod()"
+            (ngModelChange)="onPodSelect($event)"
+          ></rd-select>
         </div>
         <div class="control">
           <label>Time range</label>
-          <select [(ngModel)]="selectedRange" (ngModelChange)="onRangeChange()">
-            @for (r of timeRanges; track r.label) {
-              <option [ngValue]="r">{{ r.label }}</option>
-            }
-          </select>
+          <rd-select
+            [items]="timeRanges"
+            placeholder="Time range"
+            [minWidth]="160"
+            size="compact"
+            [ngModel]="selectedRange()"
+            (ngModelChange)="onRangeSelect($event)"
+          ></rd-select>
         </div>
-        <div class="control flex-grow">
+        <div class="control">
           <label>Levels</label>
-          <div class="level-chips">
-            @for (lvl of levels; track lvl) {
-              <button
-                type="button"
-                class="chip"
-                [attr.data-level]="lvl.toLowerCase()"
-                [class.active]="isLevelSelected(lvl)"
-                (click)="toggleLevel(lvl)">
-                {{ lvl }}
-              </button>
-            }
-          </div>
+          <rd-select
+            [items]="levelOptions"
+            [multiple]="true"
+            [showSelectAll]="true"
+            placeholder="All levels"
+            [minWidth]="160"
+            size="compact"
+            [ngModel]="selectedLevelValues()"
+            (ngModelChange)="onLevelsChange($event)"
+          ></rd-select>
         </div>
         <div class="control">
           <label>Search</label>
@@ -157,7 +154,17 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   selectedRange = signal<TimeRange>(TIME_RANGES[2]); // default Last 1 hour
 
   readonly levels = LOG_LEVELS;
-  readonly timeRanges = TIME_RANGES;
+  readonly timeRanges = TIME_RANGES.map((r) => ({ label: r.label, value: r }));
+  readonly levelOptions = LOG_LEVELS.map((l) => ({ label: l, value: l }));
+
+  podOptions = computed(() =>
+    this.pods().map((p) => ({
+      label: `${p.namespace} / ${p.name}`,
+      value: p,
+    })),
+  );
+
+  selectedLevelValues = computed(() => Array.from(this.selectedLevels()));
 
   private subs?: Subscription;
   private idSeed = 0;
@@ -189,24 +196,23 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     });
   });
 
-  isLevelSelected(level: LogLevel): boolean {
-    return this.selectedLevels().has(level);
-  }
-
-  toggleLevel(level: LogLevel) {
-    const next = new Set(this.selectedLevels());
-    if (next.has(level)) next.delete(level);
-    else next.add(level);
-    if (next.size === 0) {
-      // Don't allow zero levels - re-enable all
-      LOG_LEVELS.forEach((l) => next.add(l));
-    }
+  onLevelsChange(levels: LogLevel[] | null) {
+    const next = new Set<LogLevel>(levels ?? []);
+    if (next.size === 0) LOG_LEVELS.forEach((l) => next.add(l));
     this.selectedLevels.set(next);
   }
 
-  onRangeChange() {
-    const pod = this.selectedPod();
-    if (pod) this.fetchTail(pod);
+  onRangeSelect(range: TimeRange | null) {
+    if (range) {
+      this.selectedRange.set(range);
+      const pod = this.selectedPod();
+      if (pod) this.fetchTail(pod);
+    }
+  }
+
+  onPodSelect(pod: PodInfo | null) {
+    this.selectedPod.set(pod);
+    this.onPodChange();
   }
 
   feed = computed<FeedRow[]>(() => {
