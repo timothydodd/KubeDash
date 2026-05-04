@@ -38,7 +38,7 @@ export class DashPageComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.checkScreenSize();
   }
