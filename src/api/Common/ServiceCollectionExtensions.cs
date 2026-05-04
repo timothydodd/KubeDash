@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<TimedCache>();
         services.AddSingleton<KubernetesDashboardHubService>();
+        services.AddSingleton<PodLogStreamService>();
 
         services.AddLogging(logging =>
         {

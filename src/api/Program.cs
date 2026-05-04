@@ -65,6 +65,7 @@ public class Program
         app.MapControllers();
         app.MapFallbackToFile("/index.html");
         app.MapHub<KubernetesDashboardHub>("/kubernetes-hub");
+        app.MapHub<PodLogHub>("/podloghub");
 
         app.Run();
     }
