@@ -118,6 +118,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.8rem;
+  table-layout: fixed;
 
   thead th {
     text-align: left;
@@ -128,14 +129,16 @@
     color: var(--on-surface-muted, var(--foreground-secondary));
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
+
+    &:nth-child(1) { width: auto; }
+    &:nth-child(2) { width: 200px; }
+    &:nth-child(3) { width: 260px; }
   }
 
   tbody td {
     padding: 8px 10px;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
-
-    &:last-child { width: 30%; }
   }
 
   tbody tr:last-child td { border-bottom: 0; }
@@ -146,12 +149,22 @@
     gap: 6px;
     font-weight: 500;
     color: var(--on-surface, var(--foreground));
-    lucide-icon { width: 14px; height: 14px; color: var(--accent-blue, #8be9fd); }
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    lucide-icon { width: 14px; height: 14px; color: var(--accent-blue, #8be9fd); flex-shrink: 0; }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .node-meter {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 9ch;
     align-items: center;
     gap: 8px;
 
@@ -160,6 +173,12 @@
       color: var(--on-surface-variant, var(--foreground-secondary));
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+      text-align: right;
     }
+  }
+
+  // Memory cell needs more room for percent + GB readout
+  td:last-child .node-meter {
+    grid-template-columns: 1fr 14ch;
   }
 }
