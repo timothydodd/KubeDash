@@ -1,71 +1,259 @@
+
+// Import custom Bootstrap replacement styles
+@use "styles/_button.scss";
+@use "styles/_forms.scss";
+@use "styles/_alerts.scss";
+@use "styles/_layouts.scss";
+@use "styles/_scaffolding.scss";
+@use "styles/_bootstrap.scss";
+@use "styles/_utils.scss";
+@use "styles/_dropdowns.scss";
 /* You can add global styles to this file, and also import other style files */
 
-@use "../src/styles/vars" as *;
-@use "../src/styles/mixins" as *;
-
-@import "../node_modules/ngx-toastr/toastr";
-@import "../node_modules/@ng-select/ng-select/scss/default.theme.scss";
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
-@import "../src/styles/ng-select.scss";
-@import "../src/styles/button";
-@import "../src/styles/forms";
-@import "../src/styles/modal";
-@import "../src/styles/scaffolding";
-@import "../src/styles/utilities";
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import "variables.scss";
 
 html {
-  //background-color: var(--background);
-  color: var(--foreground);
-
-  font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  margin: 0;
-
-  /* Prevent mobile scrolling issues */
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* iOS specific fixes */
-  @supports (-webkit-touch-callout: none) {
-    /* iOS safe area support */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-
-  body {
-    //   background-color: var(--background);
-
-    /* Prevent overscroll bounce on iOS */
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
-
-    /* Fix iOS viewport height issues */
-    min-height: 100vh;
-    min-height: 100dvh;
-
-    /* Prevent zoom on input focus */
-    -webkit-text-size-adjust: 100%;
-
-    /* Prevent pull-to-refresh */
-    overscroll-behavior-y: contain;
-    height: 100vh;
-    width: 100%;
+    background-color: var(--background);
+    color: var(--foreground);
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
     margin: 0;
-  }
 
-  h1,
-  h2,
-  h3 {
-    color: white;
-  }
-  lucide-icon {
+    body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        overflow: hidden;
+    }
+}
+
+.gap20 {
+    gap: 20px;
+}
+
+.gap10 {
+    gap: 10px;
+}
+
+.flex-column {
+    flex-direction: column;
     display: flex;
-    align-items: center;
-  }
-  *,
-  *:before,
-  *:after {
-    box-sizing: border-box;
-  }
+}
+
+val-errors {
+    color: var(--red);
+}
+
+// Syntax Highlighting Styles
+.search-highlight {
+    background: rgba(255, 255, 0, 0.3);
+    color: #000;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+// URL highlighting
+.url {
+    color: #8be9fd;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+// IP address highlighting
+.ip-address {
+    color: #ffb86c;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+// File path highlighting
+.file-path {
+    color: #50fa7b;
+    font-style: italic;
+}
+
+// JSON syntax highlighting
+.json-key {
+    color: #50fa7b;
+    font-weight: 600;
+}
+
+.json-string {
+    color: #f1fa8c;
+}
+
+.json-number {
+    color: #bd93f9;
+    font-weight: 500;
+}
+
+.json-boolean {
+    color: #ff79c6;
+    font-weight: 600;
+}
+
+.json-null {
+    color: #6272a4;
+    font-style: italic;
+}
+
+// Stack trace highlighting
+.stack-class {
+    color: #8be9fd;
+    font-weight: 500;
+}
+
+.stack-method {
+    color: #50fa7b;
+    font-weight: 600;
+}
+
+.stack-line {
+    color: #ffb86c;
+    font-weight: 500;
+}
+
+// HTTP method highlighting
+.http-method {
+    color: #bd93f9;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: rgba(189, 147, 249, 0.1);
+}
+
+// HTTP status code highlighting
+.http-success {
+    color: #50fa7b;
+    font-weight: 700;
+    background: rgba(80, 250, 123, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.http-redirect {
+    color: #8be9fd;
+    font-weight: 700;
+    background: rgba(139, 233, 253, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.http-client-error {
+    color: #ffb86c;
+    font-weight: 700;
+    background: rgba(255, 184, 108, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.http-server-error {
+    color: #ff5555;
+    font-weight: 700;
+    background: rgba(255, 85, 85, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+// Log level highlighting
+.log-level-error {
+    color: #ff5555;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.log-level-warn {
+    color: #f1fa8c;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.log-level-info {
+    color: #8be9fd;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.log-level-debug {
+    color: #6272a4;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+// SQL keyword highlighting
+.sql-keyword {
+    color: #bd93f9;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+// Exception type highlighting
+.exception-type {
+    color: #ff5555;
+    font-weight: 700;
+    background: rgba(255, 85, 85, 0.1);
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+// .NET namespace highlighting
+.dotnet-namespace {
+    color: #8be9fd;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+// Email highlighting
+.email {
+    color: #8be9fd;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+// UUID highlighting
+.uuid {
+    color: #bd93f9;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+    background: rgba(189, 147, 249, 0.1);
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+// Key-value pair highlighting
+.kv-key {
+    color: #ffb86c;  // Orange - less commonly used
+    font-weight: 600;
+}
+
+.kv-number {
+    color: #ff79c6;  // Pink - distinctive for values
+    font-weight: 600;
+}
+
+.kv-string {
+    color: #f1fa8c;
+    font-style: italic;
+}
+
+.kv-boolean {
+    color: #ff79c6;  // Pink - same as numbers for consistency
+    font-weight: 600;
+}
+
+.kv-value {
+    color: #ff79c6;  // Pink - same as numbers for consistency
+}
+
+// Timestamp highlighting
+.timestamp {
+    color: #ffb86c;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
