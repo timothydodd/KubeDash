@@ -52,6 +52,42 @@
     }
   }
 
+  .level-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    height: 36px;
+    align-items: center;
+
+    .chip {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--on-surface-muted, var(--foreground-secondary));
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+      &:hover { color: var(--on-surface, var(--foreground)); }
+
+      &.active {
+        color: var(--on-surface, var(--foreground));
+        border-color: currentColor;
+      }
+
+      &[data-level="error"].active    { color: #ff5555; background: rgba(255, 85, 85, 0.12); }
+      &[data-level="warning"].active  { color: #f1fa8c; background: rgba(241, 250, 140, 0.12); }
+      &[data-level="information"].active { color: #8be9fd; background: rgba(139, 233, 253, 0.12); }
+      &[data-level="debug"].active    { color: #6272a4; background: rgba(98, 114, 164, 0.18); }
+      &[data-level="trace"].active    { color: #6272a4; background: rgba(98, 114, 164, 0.18); }
+    }
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;

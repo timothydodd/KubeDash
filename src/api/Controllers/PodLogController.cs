@@ -33,7 +33,11 @@ public class PodLogController : ControllerBase
     }
 
     [HttpGet("tail")]
-    public async Task<IActionResult> GetRecentLogs([FromQuery] string @namespace, [FromQuery] string pod, [FromQuery] int tailLines = 500)
+    public async Task<IActionResult> GetRecentLogs(
+        [FromQuery] string @namespace,
+        [FromQuery] string pod,
+        [FromQuery] int tailLines = 500,
+        [FromQuery] int? sinceSeconds = null)
     {
         try
         {
@@ -42,7 +46,8 @@ public class PodLogController : ControllerBase
                 namespaceParameter: @namespace,
                 follow: false,
                 timestamps: true,
-                tailLines: tailLines);
+                tailLines: sinceSeconds.HasValue ? null : tailLines,
+                sinceSeconds: sinceSeconds);
             using var reader = new StreamReader(resp.Body);
             var text = await reader.ReadToEndAsync();
             return Ok(new { lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries) });

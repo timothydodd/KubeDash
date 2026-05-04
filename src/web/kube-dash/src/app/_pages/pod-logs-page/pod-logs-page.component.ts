@@ -25,6 +25,22 @@ interface PodInfo {
   logLevel: string;
 }
 
+const LOG_LEVELS = ['Error', 'Warning', 'Information', 'Debug', 'Trace'] as const;
+type LogLevel = (typeof LOG_LEVELS)[number];
+
+interface TimeRange {
+  label: string;
+  seconds: number | null; // null = all available
+}
+const TIME_RANGES: TimeRange[] = [
+  { label: 'Last 5 min', seconds: 5 * 60 },
+  { label: 'Last 15 min', seconds: 15 * 60 },
+  { label: 'Last 1 hour', seconds: 60 * 60 },
+  { label: 'Last 6 hours', seconds: 6 * 60 * 60 },
+  { label: 'Last 24 hours', seconds: 24 * 60 * 60 },
+  { label: 'All available', seconds: null },
+];
+
 @Component({
   selector: 'app-pod-logs-page',
   standalone: true,
@@ -51,6 +67,29 @@ interface PodInfo {
               <option [ngValue]="p">{{ p.namespace }} / {{ p.name }}</option>
             }
           </select>
+        </div>
+        <div class="control">
+          <label>Time range</label>
+          <select [(ngModel)]="selectedRange" (ngModelChange)="onRangeChange()">
+            @for (r of timeRanges; track r.label) {
+              <option [ngValue]="r">{{ r.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="control flex-grow">
+          <label>Levels</label>
+          <div class="level-chips">
+            @for (lvl of levels; track lvl) {
+              <button
+                type="button"
+                class="chip"
+                [attr.data-level]="lvl.toLowerCase()"
+                [class.active]="isLevelSelected(lvl)"
+                (click)="toggleLevel(lvl)">
+                {{ lvl }}
+              </button>
+            }
+          </div>
         </div>
         <div class="control">
           <label>Search</label>
@@ -112,6 +151,11 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   logs = signal<Log[]>([]);
   connected = signal(false);
   error = signal<string | null>(null);
+  selectedLevels = signal<Set<LogLevel>>(new Set(LOG_LEVELS));
+  selectedRange = signal<TimeRange>(TIME_RANGES[2]); // default Last 1 hour
+
+  readonly levels = LOG_LEVELS;
+  readonly timeRanges = TIME_RANGES;
 
   private subs?: Subscription;
   private idSeed = 0;
@@ -129,9 +173,39 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
 
   visibleLogs = computed(() => {
     const q = this.search().trim().toLowerCase();
-    if (!q) return this.logs();
-    return this.logs().filter((l) => l.line.toLowerCase().includes(q));
+    const levels = this.selectedLevels();
+    const range = this.selectedRange();
+    const cutoff = range.seconds ? Date.now() - range.seconds * 1000 : 0;
+    return this.logs().filter((l) => {
+      if (!levels.has(l.logLevel as LogLevel)) return false;
+      if (cutoff) {
+        const t = l.timeStamp instanceof Date ? l.timeStamp.getTime() : new Date(l.timeStamp as any).getTime();
+        if (t < cutoff) return false;
+      }
+      if (q && !l.line.toLowerCase().includes(q)) return false;
+      return true;
+    });
   });
+
+  isLevelSelected(level: LogLevel): boolean {
+    return this.selectedLevels().has(level);
+  }
+
+  toggleLevel(level: LogLevel) {
+    const next = new Set(this.selectedLevels());
+    if (next.has(level)) next.delete(level);
+    else next.add(level);
+    if (next.size === 0) {
+      // Don't allow zero levels - re-enable all
+      LOG_LEVELS.forEach((l) => next.add(l));
+    }
+    this.selectedLevels.set(next);
+  }
+
+  onRangeChange() {
+    const pod = this.selectedPod();
+    if (pod) this.fetchTail(pod);
+  }
 
   feed = computed<FeedRow[]>(() => {
     const rows: FeedRow[] = [];
@@ -212,7 +286,14 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   }
 
   private fetchTail(pod: PodInfo) {
-    const url = `${environment.apiUrl}/api/log/tail?namespace=${encodeURIComponent(pod.namespace)}&pod=${encodeURIComponent(pod.name)}&tailLines=500`;
+    const range = this.selectedRange();
+    const params = new URLSearchParams({
+      namespace: pod.namespace,
+      pod: pod.name,
+    });
+    if (range.seconds) params.set('sinceSeconds', String(range.seconds));
+    else params.set('tailLines', '2000');
+    const url = `${environment.apiUrl}/api/log/tail?${params.toString()}`;
     this.http.get<{ lines: string[] }>(url).subscribe({
       next: (resp) => {
         const seed: Log[] = resp.lines.map((raw) => this.lineToLog(pod, raw));
