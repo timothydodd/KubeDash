@@ -1,7 +1,25 @@
 <div class="cluster-overview-widget">
   <div class="widget-header">
-    <lucide-icon name="activity" class="header-icon" />
-    <h3>Cluster Overview</h3>
+    <div class="header-content">
+      <lucide-icon name="activity" class="header-icon" />
+      <h3>Cluster Overview</h3>
+    </div>
+    @if (cluster()) {
+      <div class="header-kpis">
+        <span class="kpi" title="CPU usage">
+          <lucide-icon name="cpu" />
+          {{ cpuUsagePercent() }}%
+        </span>
+        <span class="kpi" title="Memory usage">
+          <lucide-icon name="memory-stick" />
+          {{ memoryUsagePercent() }}%
+        </span>
+        <span class="kpi" title="Nodes">
+          <lucide-icon name="server" />
+          {{ nodeCount() }}
+        </span>
+      </div>
+    }
   </div>
 
   @if (loading()) {
@@ -19,68 +37,55 @@
       </button>
     </div>
   } @else if (cluster()) {
-    <div class="cluster-metrics">
-      <div class="metrics-grid">
-        <div class="metric-card cpu-metric">
-          <div class="metric-header">
-            <lucide-icon name="cpu" />
-            <span>CPU</span>
-          </div>
-          <div class="metric-value">{{ cpuUsagePercent() }}%</div>
-          <p class="metric-label">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</p>
+    <div class="cluster-summary">
+      <div class="meter">
+        <div class="meter-head">
+          <span><lucide-icon name="cpu" /> CPU</span>
+          <span class="meter-value">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</span>
         </div>
-
-        <div class="metric-card memory-metric">
-          <div class="metric-header">
-            <lucide-icon name="memory-stick" />
-            <span>Memory</span>
-          </div>
-          <div class="metric-value">{{ memoryUsagePercent() }}%</div>
-          <p class="metric-label">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</p>
-        </div>
-
-        <div class="metric-card nodes-metric">
-          <div class="metric-header">
-            <lucide-icon name="server" />
-            <span>Nodes</span>
-          </div>
-          <div class="metric-value">{{ nodeCount() }}</div>
-          <p class="metric-label">Active Nodes</p>
-        </div>
+        <div class="bar-track"><div class="bar-fill cpu" [style.width.%]="cpuUsagePercent()"></div></div>
       </div>
-
-      <div class="progress-section">
-        <div class="progress-item">
-          <div class="progress-header">
-            <div class="progress-label">
-              <lucide-icon name="cpu" />
-              <span>CPU Usage</span>
-            </div>
-            <div class="progress-value">{{ cpuUsagePercent() }}%</div>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar cpu-progress" [style.width.%]="cpuUsagePercent()"></div>
-          </div>
+      <div class="meter">
+        <div class="meter-head">
+          <span><lucide-icon name="memory-stick" /> Memory</span>
+          <span class="meter-value">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</span>
         </div>
-
-        <div class="progress-item">
-          <div class="progress-header">
-            <div class="progress-label">
-              <lucide-icon name="memory-stick" />
-              <span>Memory Usage</span>
-            </div>
-            <div class="progress-value">{{ memoryUsagePercent() }}%</div>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar memory-progress" [style.width.%]="memoryUsagePercent()"></div>
-          </div>
-        </div>
+        <div class="bar-track"><div class="bar-fill mem" [style.width.%]="memoryUsagePercent()"></div></div>
       </div>
     </div>
-  } @else {
-    <div class="loading-state">
-      <lucide-icon name="server" />
-      <p>No cluster data available</p>
-    </div>
+
+    @if (cluster()!.nodes?.length) {
+      <table class="nodes-table">
+        <thead>
+          <tr>
+            <th>Node</th>
+            <th>CPU</th>
+            <th>Memory</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of cluster()!.nodes; track n.name) {
+            <tr>
+              <td class="node-name">
+                <lucide-icon name="server" />
+                <span>{{ n.name }}</span>
+              </td>
+              <td>
+                <div class="node-meter">
+                  <div class="bar-track small"><div class="bar-fill cpu" [style.width.%]="round(n.cpuPercentage)"></div></div>
+                  <span class="meter-pct">{{ round(n.cpuPercentage) }}%</span>
+                </div>
+              </td>
+              <td>
+                <div class="node-meter">
+                  <div class="bar-track small"><div class="bar-fill mem" [style.width.%]="round(n.memoryPercentage)"></div></div>
+                  <span class="meter-pct">{{ round(n.memoryPercentage) }}% | {{ formatMemory(n.memoryUsage) }}</span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
   }
 </div>

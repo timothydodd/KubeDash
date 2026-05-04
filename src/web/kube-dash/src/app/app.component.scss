@@ -19,62 +19,52 @@
 
 .app-header {
   background: var(--surface);
-  color: white;
-  padding: 1rem 2rem;
+  color: var(--foreground);
+  padding: 0 1.25rem;
+  height: 52px;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   border-bottom: 1px solid var(--border-color);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
   h1 {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--foreground) 0%, var(--accent-cyan) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--foreground);
+    letter-spacing: 0.01em;
   }
 
-  .subtitle {
-    opacity: 0.8;
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: var(--foreground-secondary);
-  }
+  .subtitle { display: none; }
 
   .app-nav {
-    margin-left: auto;
     display: flex;
     gap: 0.25rem;
+    height: 100%;
+    align-items: stretch;
 
     .nav-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.875rem;
-      border-radius: 8px;
-      color: var(--foreground-secondary);
+      gap: 0.4rem;
+      padding: 0 0.875rem;
+      color: var(--on-surface-muted, var(--foreground-secondary));
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 500;
-      transition: background-color 0.15s ease, color 0.15s ease;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
 
       lucide-icon {
-        width: 1.05rem;
-        height: 1.05rem;
+        width: 0.95rem;
+        height: 0.95rem;
       }
 
-      &:hover {
-        color: var(--foreground);
-        background: var(--surface-variant, rgba(255, 255, 255, 0.05));
-      }
+      &:hover { color: var(--foreground); }
 
       &.active {
         color: var(--foreground);
-        background: var(--surface-container, rgba(255, 255, 255, 0.08));
+        border-bottom-color: var(--accent-cyan, #8be9fd);
       }
     }
   }

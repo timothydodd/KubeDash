@@ -88,4 +88,8 @@ export class WClusterOverviewComponent implements OnInit, OnDestroy {
   formatCPU(cores: number): string {
     return cores.toFixed(1) + ' cores';
   }
+
+  round(n: number | undefined | null): number {
+    return Math.round(n ?? 0);
+  }
 }
