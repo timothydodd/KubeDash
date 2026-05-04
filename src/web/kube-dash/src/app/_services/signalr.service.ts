@@ -45,11 +45,12 @@ export class SignalRService implements OnDestroy {
   }
 
   public async ensureConnected(): Promise<void> {
-    if (this.hubConnection?.state === signalR.HubConnectionState.Connected) return;
+    const isConnected = () => this.hubConnection?.state === signalR.HubConnectionState.Connected;
+    if (isConnected()) return;
     if (this.startPromise) {
       try { await this.startPromise; } catch { /* ignore, fall through */ }
     }
-    if (this.hubConnection?.state !== signalR.HubConnectionState.Connected) {
+    if (!isConnected()) {
       throw new Error('SignalR connection not available');
     }
   }
