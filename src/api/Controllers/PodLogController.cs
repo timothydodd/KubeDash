@@ -30,7 +30,8 @@ public class PodLogController : ControllerBase
             name = p.Metadata.Name,
             deployment = p.Metadata.OwnerReferences?.FirstOrDefault()?.Name ?? p.Metadata.Name,
             @namespace = p.Metadata.NamespaceProperty,
-            logLevel = p.Status?.Phase ?? "Unknown"
+            logLevel = p.Status?.Phase ?? "Unknown",
+            containers = p.Spec?.Containers?.Select(c => c.Name).ToArray() ?? Array.Empty<string>()
         });
         return Ok(result);
     }
@@ -39,21 +40,32 @@ public class PodLogController : ControllerBase
     public async Task<IActionResult> GetRecentLogs(
         [FromQuery] string @namespace,
         [FromQuery] string pod,
+        [FromQuery] string? container = null,
         [FromQuery] int tailLines = 500,
         [FromQuery] int? sinceSeconds = null)
     {
         try
         {
-            using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
-                name: pod,
-                namespaceParameter: @namespace,
-                follow: false,
-                timestamps: true,
-                tailLines: sinceSeconds.HasValue ? null : tailLines,
-                sinceSeconds: sinceSeconds);
-            using var reader = new StreamReader(resp.Body);
-            var text = await reader.ReadToEndAsync();
-            return Ok(new { lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries) });
+            var containers = container is { Length: > 0 }
+                ? new[] { container }
+                : await GetContainerNames(@namespace, pod);
+
+            var lines = new List<string>();
+            foreach (var c in containers)
+            {
+                using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
+                    name: pod,
+                    namespaceParameter: @namespace,
+                    container: c,
+                    follow: false,
+                    timestamps: true,
+                    tailLines: sinceSeconds.HasValue ? null : tailLines,
+                    sinceSeconds: sinceSeconds);
+                using var reader = new StreamReader(resp.Body);
+                var text = await reader.ReadToEndAsync();
+                lines.AddRange(text.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+            }
+            return Ok(new { lines });
         }
         catch (Exception ex)
         {
@@ -76,30 +88,60 @@ public class PodLogController : ControllerBase
 
         try
         {
-            using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
-                name: pod,
-                namespaceParameter: @namespace,
-                follow: false,
-                timestamps: false,
-                sinceSeconds: sinceSeconds);
-
-            using var reader = new StreamReader(resp.Body);
-            var text = await reader.ReadToEndAsync();
+            var containers = await GetContainerNames(@namespace, pod);
             int errors = 0, warnings = 0;
-            foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+
+            foreach (var c in containers)
             {
-                var u = line.ToUpperInvariant();
-                if (u.Contains("ERROR") || u.Contains("EXCEPTION") || u.Contains("FATAL")) errors++;
-                else if (u.Contains("WARN")) warnings++;
+                try
+                {
+                    using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
+                        name: pod,
+                        namespaceParameter: @namespace,
+                        container: c,
+                        follow: false,
+                        timestamps: false,
+                        sinceSeconds: sinceSeconds);
+
+                    using var reader = new StreamReader(resp.Body);
+                    var text = await reader.ReadToEndAsync();
+                    foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var u = line.ToUpperInvariant();
+                        if (u.Contains("ERROR") || u.Contains("EXCEPTION") || u.Contains("FATAL")) errors++;
+                        else if (u.Contains("WARN")) warnings++;
+                    }
+                }
+                catch (k8s.Autorest.HttpOperationException)
+                {
+                    // Container may not have logs yet (just-started, init), skip silently.
+                }
             }
+
             var result = new { error = errors, warning = warnings, sinceSeconds };
             _cache.Set(key, result, TimeSpan.FromSeconds(60));
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Log count fetch failed for {Ns}/{Pod}", @namespace, pod);
-            return Ok(new { error = 0, warning = 0, sinceSeconds, unavailable = true });
+            // Cache the unavailable result too so we don't hammer K8s.
+            var fallback = new { error = 0, warning = 0, sinceSeconds, unavailable = true };
+            _cache.Set(key, fallback, TimeSpan.FromMinutes(5));
+            _logger.LogWarning("Log count fetch failed for {Ns}/{Pod}: {Message}", @namespace, pod, ex.Message);
+            return Ok(fallback);
         }
+    }
+
+    private async Task<string[]> GetContainerNames(string ns, string pod)
+    {
+        var key = $"containers:{ns}/{pod}";
+        if (_cache.TryGetValue(key, out string[]? cached) && cached is not null)
+        {
+            return cached;
+        }
+        var p = await _kubernetes.CoreV1.ReadNamespacedPodAsync(pod, ns);
+        var names = p.Spec?.Containers?.Select(c => c.Name).ToArray() ?? Array.Empty<string>();
+        _cache.Set(key, names, TimeSpan.FromMinutes(5));
+        return names;
     }
 }

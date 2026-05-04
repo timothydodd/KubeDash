@@ -9,6 +9,7 @@ public sealed record PodLogLine(
     long Id,
     string Pod,
     string Namespace,
+    string Container,
     string Line,
     string LogLevel,
     DateTime TimeStamp,
@@ -75,22 +76,17 @@ public sealed class PodLogStreamService : IAsyncDisposable
         {
             try
             {
-                using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
-                    name: pod,
-                    namespaceParameter: ns,
-                    follow: true,
-                    timestamps: true,
-                    tailLines: 200,
-                    cancellationToken: cts.Token);
-
-                using var reader = new StreamReader(resp.Body);
-                string? line;
-                while (!cts.IsCancellationRequested && (line = await reader.ReadLineAsync(cts.Token)) != null)
+                var podObj = await _kubernetes.CoreV1.ReadNamespacedPodAsync(pod, ns, cancellationToken: cts.Token);
+                var containers = podObj.Spec?.Containers?.Select(c => c.Name).ToArray()
+                                 ?? Array.Empty<string>();
+                if (containers.Length == 0)
                 {
-                    var entry = ParseLine(ns, pod, line);
-                    var groupName = $"pod-{ns}-{pod}";
-                    await _hub.Clients.Group(groupName).SendAsync("ReceiveLog", new[] { entry }, cts.Token);
+                    _logger.LogWarning("Pod {Ns}/{Pod} has no containers", ns, pod);
+                    return;
                 }
+
+                var tasks = containers.Select(c => StreamContainer(ns, pod, c, cts.Token)).ToArray();
+                await Task.WhenAll(tasks);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
@@ -106,7 +102,36 @@ public sealed class PodLogStreamService : IAsyncDisposable
         return stream;
     }
 
-    private PodLogLine ParseLine(string ns, string pod, string raw)
+    private async Task StreamContainer(string ns, string pod, string container, CancellationToken token)
+    {
+        try
+        {
+            using var resp = await _kubernetes.CoreV1.ReadNamespacedPodLogWithHttpMessagesAsync(
+                name: pod,
+                namespaceParameter: ns,
+                container: container,
+                follow: true,
+                timestamps: true,
+                tailLines: 200,
+                cancellationToken: token);
+
+            using var reader = new StreamReader(resp.Body);
+            var groupName = $"pod-{ns}-{pod}";
+            string? line;
+            while (!token.IsCancellationRequested && (line = await reader.ReadLineAsync(token)) != null)
+            {
+                var entry = ParseLine(ns, pod, container, line);
+                await _hub.Clients.Group(groupName).SendAsync("ReceiveLog", new[] { entry }, token);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Container log stream ended for {Ns}/{Pod}/{Container}", ns, pod, container);
+        }
+    }
+
+    private PodLogLine ParseLine(string ns, string pod, string container, string raw)
     {
         var ts = DateTime.UtcNow;
         var content = raw;
@@ -128,6 +153,7 @@ public sealed class PodLogStreamService : IAsyncDisposable
             Id: Interlocked.Increment(ref _sequence),
             Pod: pod,
             Namespace: ns,
+            Container: container,
             Line: content,
             LogLevel: level,
             TimeStamp: ts,
