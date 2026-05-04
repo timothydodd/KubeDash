@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  # Set DOCKERHUB_REPO via repo variable (Settings -> Variables) e.g. "timothydodd/kubedash".
+  # Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN as repo secrets.
+  DOCKERHUB_REPO: ${{ vars.DOCKERHUB_REPO }}
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            src/web/kube-dash/package-lock.json
+            src/web/kube-dash/src/rd-ui/package-lock.json
+
+      - name: Restore .NET
+        run: dotnet restore src/api/KubeDashApi.csproj
+
+      - name: Build .NET
+        run: dotnet build src/api/KubeDashApi.csproj -c Release --no-restore
+
+      - name: Install rd-ui deps
+        working-directory: src/web/kube-dash/src/rd-ui
+        run: npm ci
+
+      - name: Install web deps
+        working-directory: src/web/kube-dash
+        run: npm ci
+
+      - name: Build rd-ui library
+        working-directory: src/web/kube-dash
+        run: npm run lib:build
+
+      - name: Build web (production)
+        working-directory: src/web/kube-dash
+        run: npm run prod
+
+  docker:
+    name: Build & push image
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_REPO != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

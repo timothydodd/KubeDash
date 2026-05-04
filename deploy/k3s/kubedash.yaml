@@ -1,0 +1,207 @@
+# KubeDash - sample k3s manifest.
+#
+# Replace IMAGE / JWT_SECRET / HOST below before applying. Generate a JWT secret with:
+#   openssl rand -base64 48
+#
+# Apply with:
+#   kubectl apply -f deploy/k3s/kubedash.yaml
+#
+# RBAC grants read access to the cluster resources the dashboard needs:
+# pods/nodes/events (list+watch), pod logs, namespaces, deployments, services,
+# and the metrics.k8s.io API for resource usage.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubedash
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubedash
+  namespace: kubedash
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubedash-reader
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - namespaces
+      - pods
+      - pods/log
+      - services
+      - events
+      - endpoints
+      - configmaps
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubedash-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubedash-reader
+subjects:
+  - kind: ServiceAccount
+    name: kubedash
+    namespace: kubedash
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubedash-jwt
+  namespace: kubedash
+type: Opaque
+stringData:
+  # REPLACE with `openssl rand -base64 48`. Must be at least 32 chars.
+  secret: "REPLACE_ME_WITH_A_LONG_RANDOM_VALUE_AT_LEAST_32_CHARS"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kubedash-data
+  namespace: kubedash
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+  # k3s default is "local-path"; change if your cluster uses a different storage class.
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubedash
+  namespace: kubedash
+  labels:
+    app.kubernetes.io/name: kubedash
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # SQLite on RWO volume - single writer
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubedash
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubedash
+    spec:
+      serviceAccountName: kubedash
+      containers:
+        - name: kubedash
+          image: ghcr.io/timothydodd/kubedash:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Data Source=/app/data/kubedash.db"
+            - name: JwtSettings__Issuer
+              value: "kubedash"
+            - name: JwtSettings__Audience
+              value: "kubedash"
+            - name: JwtSettings__ExpiryMinutes
+              value: "60"
+            - name: JwtSettings__RefreshTokenExpiryDays
+              value: "30"
+            - name: JwtSettings__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: kubedash-jwt
+                  key: secret
+            # If exposing the SPA from a different origin, set CORS:
+            # - name: AllowedOrigins
+            #   value: "https://kubedash.example.com"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kubedash-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubedash
+  namespace: kubedash
+  labels:
+    app.kubernetes.io/name: kubedash
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: kubedash
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# k3s ships Traefik by default; swap apiVersion / class for a different ingress.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubedash
+  namespace: kubedash
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: kubedash.example.com # REPLACE
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubedash
+                port:
+                  name: http
+  # Uncomment if you have cert-manager wiring TLS:
+  # tls:
+  #   - hosts: ["kubedash.example.com"]
+  #     secretName: kubedash-tls
