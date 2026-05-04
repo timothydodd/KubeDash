@@ -153,9 +153,9 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     const today = now.toDateString();
     const yesterday = new Date(now.getTime() - 86400_000).toDateString();
     const key = d.toDateString();
-    if (key === today) return `Today  ${d.toLocaleDateString()}`;
-    if (key === yesterday) return `Yesterday  ${d.toLocaleDateString()}`;
-    return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if (key === today) return `Today  ${d.toLocaleDateString('en-US')}`;
+    if (key === yesterday) return `Yesterday  ${d.toLocaleDateString('en-US')}`;
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   constructor() {
@@ -279,6 +279,6 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
 
   formatTs(d: Date | string) {
     const date = typeof d === 'string' ? new Date(d) : d;
-    return date.toLocaleTimeString();
+    return date.toLocaleTimeString('en-US', { hour12: false });
   }
 }
