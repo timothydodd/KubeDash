@@ -44,6 +44,40 @@
     font-weight: 400;
     color: var(--foreground-secondary);
   }
+
+  .app-nav {
+    margin-left: auto;
+    display: flex;
+    gap: 0.25rem;
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      border-radius: 8px;
+      color: var(--foreground-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 0.15s ease, color 0.15s ease;
+
+      lucide-icon {
+        width: 1.05rem;
+        height: 1.05rem;
+      }
+
+      &:hover {
+        color: var(--foreground);
+        background: var(--surface-variant, rgba(255, 255, 255, 0.05));
+      }
+
+      &.active {
+        color: var(--foreground);
+        background: var(--surface-container, rgba(255, 255, 255, 0.08));
+      }
+    }
+  }
 }
 
 .app-main {

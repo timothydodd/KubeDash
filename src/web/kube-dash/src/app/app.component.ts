@@ -1,18 +1,37 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterModule, RouterOutlet } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { SignalRService } from './_services/api/signalr.service';
 import { DynamicBackgroundDirective } from './_directives/dynamic-background';
 import { EffectBackgroundDirective } from './_directives/effect-background';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterModule, DynamicBackgroundDirective, EffectBackgroundDirective],
+  imports: [
+    RouterOutlet,
+    RouterModule,
+    RouterLink,
+    RouterLinkActive,
+    LucideAngularModule,
+    DynamicBackgroundDirective,
+    EffectBackgroundDirective,
+  ],
   template: `
     <div class="app-container" appDynamicBackground>
       <div class="content-wrapper" appEffectBackground>
         <header class="app-header">
           <h1>KubeDash</h1>
           <span class="subtitle">Kubernetes Dashboard</span>
+          <nav class="app-nav">
+            <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+              <lucide-icon name="layout-grid" />
+              <span>Dashboard</span>
+            </a>
+            <a routerLink="/logs" routerLinkActive="active" class="nav-link">
+              <lucide-icon name="server" />
+              <span>Pod Logs</span>
+            </a>
+          </nav>
         </header>
         <main class="app-main">
           <router-outlet />
