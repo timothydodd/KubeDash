@@ -114,71 +114,63 @@
   }
 }
 
-.nodes-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  table-layout: fixed;
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
 
-  thead th {
-    text-align: left;
-    padding: 6px 10px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--on-surface-muted, var(--foreground-secondary));
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
+.node-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-variant, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
 
-    &:nth-child(1) { width: auto; }
-    &:nth-child(2) { width: 200px; }
-    &:nth-child(3) { width: 260px; }
-  }
-
-  tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
-  }
-
-  tbody tr:last-child td { border-bottom: 0; }
-
-  .node-name {
+  .node-card-head {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-weight: 500;
     color: var(--on-surface, var(--foreground));
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 500;
+    font-size: 0.85rem;
 
     lucide-icon { width: 14px; height: 14px; color: var(--accent-blue, #8be9fd); flex-shrink: 0; }
 
-    span {
+    .name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
   }
 
-  .node-meter {
-    display: grid;
-    grid-template-columns: 1fr 9ch;
-    align-items: center;
-    gap: 8px;
+  .node-card-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
-    .meter-pct {
+    .meter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 0.72rem;
       color: var(--on-surface-variant, var(--foreground-secondary));
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-      text-align: right;
-    }
-  }
 
-  // Memory cell needs more room for percent + GB readout
-  td:last-child .node-meter {
-    grid-template-columns: 1fr 14ch;
+      .meter-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        lucide-icon { width: 12px; height: 12px; opacity: 0.7; }
+      }
+
+      .meter-pct {
+        font-variant-numeric: tabular-nums;
+        color: var(--on-surface, var(--foreground));
+        white-space: nowrap;
+      }
+    }
   }
 }

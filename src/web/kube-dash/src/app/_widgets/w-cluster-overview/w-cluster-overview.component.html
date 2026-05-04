@@ -55,37 +55,32 @@
     </div>
 
     @if (cluster()!.nodes?.length) {
-      <table class="nodes-table">
-        <thead>
-          <tr>
-            <th>Node</th>
-            <th>CPU</th>
-            <th>Memory</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (n of cluster()!.nodes; track n.name) {
-            <tr>
-              <td class="node-name">
-                <lucide-icon name="server" />
-                <span>{{ n.name }}</span>
-              </td>
-              <td>
-                <div class="node-meter">
-                  <div class="bar-track small"><div class="bar-fill cpu" [style.width.%]="round(n.cpuPercentage)"></div></div>
-                  <span class="meter-pct">{{ round(n.cpuPercentage) }}%</span>
-                </div>
-              </td>
-              <td>
-                <div class="node-meter">
-                  <div class="bar-track small"><div class="bar-fill mem" [style.width.%]="round(n.memoryPercentage)"></div></div>
-                  <span class="meter-pct">{{ round(n.memoryPercentage) }}% | {{ formatMemory(n.memoryUsage) }}</span>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <div class="nodes-grid">
+        @for (n of cluster()!.nodes; track n.name) {
+          <div class="node-card">
+            <div class="node-card-head">
+              <lucide-icon name="server" />
+              <span class="name" [title]="n.name">{{ n.name }}</span>
+            </div>
+
+            <div class="node-card-meter">
+              <div class="meter-row">
+                <span class="meter-label"><lucide-icon name="cpu" /> CPU</span>
+                <span class="meter-pct">{{ round(n.cpuPercentage) }}%</span>
+              </div>
+              <div class="bar-track small"><div class="bar-fill cpu" [style.width.%]="round(n.cpuPercentage)"></div></div>
+            </div>
+
+            <div class="node-card-meter">
+              <div class="meter-row">
+                <span class="meter-label"><lucide-icon name="memory-stick" /> Memory</span>
+                <span class="meter-pct">{{ round(n.memoryPercentage) }}% | {{ formatMemory(n.memoryUsage) }}</span>
+              </div>
+              <div class="bar-track small"><div class="bar-fill mem" [style.width.%]="round(n.memoryPercentage)"></div></div>
+            </div>
+          </div>
+        }
+      </div>
     }
   }
 </div>
