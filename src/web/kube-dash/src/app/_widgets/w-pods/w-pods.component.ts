@@ -248,11 +248,11 @@ export class WPodsComponent implements OnInit, OnDestroy {
 
   private loadCounts(pods: Pod[]) {
     const requests = pods
-      .filter((p) => p.status?.phase === 'Running' || p.status?.phase === 'Failed')
+      .filter((p) => (p.status?.phase === 'Running' || p.status?.phase === 'Failed') && !!p.metadata.name)
       .map((p) => {
-        const ns = p.metadata.namespace;
-        const name = p.metadata.name;
-        const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns ?? '')}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
+        const ns = p.metadata.namespace ?? '';
+        const name = p.metadata.name ?? '';
+        const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns)}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
         return this.http.get<LogCounts>(url).pipe(
           catchError(() => of({ error: 0, warning: 0 })),
         );
