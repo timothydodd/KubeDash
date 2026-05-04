@@ -38,21 +38,50 @@ public class MessageWorker : BackgroundService
         _ = Task.Run(async () => await WatchEvents(stoppingToken), stoppingToken);
 
         // Periodically update cluster metrics
+        var consecutiveFailures = 0;
+        var lastLoggedFailure = DateTime.MinValue;
+
         while (!stoppingToken.IsCancellationRequested)
         {
+            var delay = TimeSpan.FromSeconds(30);
             try
             {
                 var metrics = await _kubernetesService.GetMetrics();
                 _memoryCache.Set(KubernetesService.MetricsCacheKey, metrics, TimeSpan.FromMinutes(1));
                 await _dashboardHubService.SendClusterUpdate(Constants.DefaultCluster.Id, metrics);
+                consecutiveFailures = 0;
+            }
+            catch (Exception ex) when (IsTransientMetricsError(ex))
+            {
+                consecutiveFailures++;
+                // Back off up to 5 minutes; suppress repetitive logs.
+                delay = TimeSpan.FromSeconds(Math.Min(300, 30 * consecutiveFailures));
+                if (consecutiveFailures == 1 || (DateTime.UtcNow - lastLoggedFailure).TotalMinutes >= 5)
+                {
+                    _logger.LogWarning(
+                        "Cluster metrics unavailable (transient): {Message}. Backing off to {Delay}s. (failure #{Count})",
+                        ex.Message, delay.TotalSeconds, consecutiveFailures);
+                    lastLoggedFailure = DateTime.UtcNow;
+                }
             }
             catch (Exception ex)
             {
+                consecutiveFailures++;
                 _logger.LogError(ex, "Error updating cluster metrics");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            try { await Task.Delay(delay, stoppingToken); }
+            catch (OperationCanceledException) { break; }
         }
+    }
+
+    private static bool IsTransientMetricsError(Exception ex)
+    {
+        // Metrics-server often resets streams or returns 503 / not-found.
+        return ex is System.Net.Http.HttpRequestException
+            || ex is System.Net.Http.HttpIOException
+            || ex is TaskCanceledException
+            || ex is k8s.Autorest.HttpOperationException;
     }
 
     private async Task WatchNodes(CancellationToken cancellationToken)
