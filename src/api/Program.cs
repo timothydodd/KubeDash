@@ -1,6 +1,8 @@
+using KubeDashApi.Common.HealthChecks;
 using KubeDashApi.Data;
 using KubeDashApi.Hubs;
 using KubeDashApi.Middleware;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace KubeDashApi;
 
@@ -33,6 +35,7 @@ public class Program
             .AddCompressionAndCaching()
             .AddPersistence(config)
             .AddAuth(config)
+            .AddAppHealthChecks()
             .AddApplicationServices(config);
 
         var app = builder.Build();
@@ -63,9 +66,28 @@ public class Program
         app.UseDefaultFiles();
 
         app.MapControllers();
-        app.MapFallbackToFile("/index.html");
         app.MapHub<KubernetesDashboardHub>("/kubernetes-hub");
         app.MapHub<PodLogHub>("/podloghub");
+
+        // Health endpoints (anonymous; safe to expose to load balancers / probes)
+        app.MapHealthChecks("/api/health/live", new HealthCheckOptions
+        {
+            Predicate = _ => false, // liveness ignores all checks; just confirms process responding
+            ResponseWriter = HealthCheckResponseWriter.Write,
+        }).AllowAnonymous();
+
+        app.MapHealthChecks("/api/health/ready", new HealthCheckOptions
+        {
+            Predicate = c => c.Tags.Contains("ready"),
+            ResponseWriter = HealthCheckResponseWriter.Write,
+        }).AllowAnonymous();
+
+        app.MapHealthChecks("/api/health", new HealthCheckOptions
+        {
+            ResponseWriter = HealthCheckResponseWriter.Write,
+        }).AllowAnonymous();
+
+        app.MapFallbackToFile("/index.html");
 
         app.Run();
     }

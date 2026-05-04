@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using k8s;
 using KubeDashApi.Common;
+using KubeDashApi.Common.HealthChecks;
 using KubeDashApi.Data;
 using KubeDashApi.Hubs;
 using KubeDashApi.Services;
@@ -97,6 +98,14 @@ public static class ServiceCollectionExtensions
         var dbFactory = new DbConnectionFactory(connectionString, DatabaseProvider.SQLite);
         services.AddSingleton(dbFactory);
         services.AddSingleton<DatabaseInitializer>();
+        return services;
+    }
+
+    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
+    {
+        services.AddHealthChecks()
+            .AddCheck<SqliteHealthCheck>("sqlite", tags: new[] { "ready" })
+            .AddCheck<KubernetesHealthCheck>("kubernetes", tags: new[] { "ready" });
         return services;
     }
 
