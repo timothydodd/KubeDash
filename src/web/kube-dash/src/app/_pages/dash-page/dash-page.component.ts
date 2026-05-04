@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostListener, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
-import { WKubernetesComponent } from '../../_widgets/w-kubernetes/w-kubernetes.component';
 import { WClusterOverviewComponent } from '../../_widgets/w-cluster-overview/w-cluster-overview.component';
 import { WPodsComponent } from '../../_widgets/w-pods/w-pods.component';
 
@@ -9,7 +8,6 @@ import { WPodsComponent } from '../../_widgets/w-pods/w-pods.component';
   selector: 'app-dash-page',
   imports: [
     RouterModule,
-    WKubernetesComponent,
     WClusterOverviewComponent,
     WPodsComponent,
   ],
@@ -21,9 +19,6 @@ import { WPodsComponent } from '../../_widgets/w-pods/w-pods.component';
         </div>
         <div class="widget-row pods-row">
           <app-w-pods class="pods-widget" />
-        </div>
-        <div class="widget-row nodes-row">
-          <app-w-kubernetes class="nodes-widget" />
         </div>
       </div>
     </div>
