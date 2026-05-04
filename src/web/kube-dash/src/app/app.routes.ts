@@ -21,4 +21,9 @@ export const routes: Routes = [
     loadComponent: () => import('./_pages/pod-logs-page/pod-logs-page.component').then((m) => m.PodLogsPageComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'change-password',
+    loadComponent: () => import('./_pages/change-password-page/change-password-page.component').then((m) => m.ChangePasswordPageComponent),
+    canActivate: [authGuard],
+  },
 ];

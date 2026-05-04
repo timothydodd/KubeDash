@@ -4,6 +4,8 @@ import { LucideAngularModule } from 'lucide-angular';
 import { SignalRService } from './_services/api/signalr.service';
 import { DynamicBackgroundDirective } from './_directives/dynamic-background';
 import { EffectBackgroundDirective } from './_directives/effect-background';
+import { UserMenuComponent } from './_components/user-menu/user-menu.component';
+import { AuthService } from './_services/auth-service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +17,7 @@ import { EffectBackgroundDirective } from './_directives/effect-background';
     LucideAngularModule,
     DynamicBackgroundDirective,
     EffectBackgroundDirective,
+    UserMenuComponent,
   ],
   template: `
     <div class="app-container" appDynamicBackground>
@@ -32,6 +35,10 @@ import { EffectBackgroundDirective } from './_directives/effect-background';
               <span>Pod Logs</span>
             </a>
           </nav>
+          @if (auth.isAuthenticated()) {
+            <div class="header-spacer"></div>
+            <app-user-menu />
+          }
         </header>
         <main class="app-main">
           <router-outlet />
@@ -43,6 +50,7 @@ import { EffectBackgroundDirective } from './_directives/effect-background';
 })
 export class AppComponent implements OnInit {
   title = 'KubeDash';
+  auth = inject(AuthService);
   private signalRService = inject(SignalRService);
 
   ngOnInit() {

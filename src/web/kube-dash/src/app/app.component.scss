@@ -37,6 +37,12 @@
 
   .subtitle { display: none; }
 
+  .header-spacer { flex: 1; }
+
+  app-user-menu {
+    margin-left: 0.5rem;
+  }
+
   .app-nav {
     display: flex;
     gap: 0.25rem;

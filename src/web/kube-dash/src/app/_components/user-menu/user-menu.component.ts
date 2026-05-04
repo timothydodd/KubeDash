@@ -1,4 +1,3 @@
-
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { Router } from '@angular/router';
@@ -12,51 +11,44 @@ import { ClickOutsideDirective } from '../../_services/click-outside.directive';
   standalone: true,
   imports: [LucideAngularModule, ClickOutsideDirective],
   template: `
-    @if (user()) {
-      <div class="user-menu-container">
-        <button type="button" class="user-menu-trigger" (click)="isOpen.set(!isOpen())" title="User menu">
-          <div class="user-avatar">
-            <lucide-icon name="user" size="18"></lucide-icon>
-          </div>
-          <span class="user-name">{{ user()?.userName }}</span>
-          <lucide-icon name="chevron-down" size="16" [class.rotated]="isOpen()"></lucide-icon>
-        </button>
-        
-        @if (isOpen()) {
-          <div class="user-menu-dropdown" appClickOutside (clickOutside)="isOpen.set(false)" [delayTime]="200">
-            <div class="dropdown-header">
-              <div class="user-info">
-                <div class="large-avatar">
-                  <lucide-icon name="user" size="24"></lucide-icon>
-                </div>
-                <div class="user-details">
-                  <div class="username">{{ user()?.userName }}</div>
-                  <div class="user-role">Administrator</div>
-                </div>
+    <div class="user-menu-container">
+      <button type="button" class="user-menu-trigger" (click)="isOpen.set(!isOpen())" title="User menu">
+        <div class="user-avatar">
+          <lucide-icon name="user" size="18"></lucide-icon>
+        </div>
+        <span class="user-name">{{ user()?.userName ?? username() ?? 'Account' }}</span>
+        <lucide-icon name="chevron-down" size="16" [class.rotated]="isOpen()"></lucide-icon>
+      </button>
+
+      @if (isOpen()) {
+        <div class="user-menu-dropdown" appClickOutside (clickOutside)="isOpen.set(false)" [delayTime]="200">
+          <div class="dropdown-header">
+            <div class="user-info">
+              <div class="large-avatar">
+                <lucide-icon name="user" size="24"></lucide-icon>
+              </div>
+              <div class="user-details">
+                <div class="username">{{ user()?.userName ?? username() ?? 'Account' }}</div>
+                <div class="user-role">Signed in</div>
               </div>
             </div>
-            
-            <div class="dropdown-divider"></div>
-            
-            <div class="dropdown-menu-items">
-              <button class="dropdown-item" (click)="navigateToSettings()">
-                <lucide-icon name="settings" size="16"></lucide-icon>
-                <span>Settings</span>
-              </button>
-              <button class="dropdown-item" (click)="navigateToAgents()">
-                <lucide-icon name="server" size="16"></lucide-icon>
-                <span>Agents</span>
-              </button>
-              <button class="dropdown-item logout" (click)="logOut()">
-                <lucide-icon name="log-out" size="16"></lucide-icon>
-                <span>Sign Out</span>
-              </button>
-            </div>
           </div>
-        }
-      </div>
 
-    }
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-menu-items">
+            <button class="dropdown-item" (click)="changePassword()">
+              <lucide-icon name="settings" size="16"></lucide-icon>
+              <span>Change Password</span>
+            </button>
+            <button class="dropdown-item logout" (click)="logOut()">
+              <lucide-icon name="log-out" size="16"></lucide-icon>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
   `,
   styleUrl: './user-menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,28 +57,27 @@ export class UserMenuComponent {
   authService = inject(AuthService);
   router = inject(Router);
   user = signal<User | null>(null);
+  username = signal<string | null>(null);
   isOpen = signal(false);
 
   constructor() {
-    this.authService
-      .getUser()
-      .pipe(take(1))
-      .subscribe((user) => {
-        this.user.update(() => user);
+    this.username.set(this.authService.getCurrentUsername());
+    const userObs = this.authService.getUser();
+    if (userObs && typeof userObs.pipe === 'function') {
+      userObs.pipe(take(1)).subscribe({
+        next: (u) => this.user.set(u),
+        error: () => { /* fall back to username from token */ },
       });
-  }
-  
-  navigateToSettings() {
-    this.isOpen.set(false);
-    this.router.navigate(['/settings']);
+    }
   }
 
-  navigateToAgents() {
+  changePassword() {
     this.isOpen.set(false);
-    this.router.navigate(['/agents']);
+    this.router.navigate(['/change-password']);
   }
 
   logOut() {
+    this.isOpen.set(false);
     this.authService.logout();
   }
 }
