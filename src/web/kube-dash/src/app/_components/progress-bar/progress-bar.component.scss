@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  width: 100%;
+  /* Matches the width of the parent component */
+  background-color: transparent;
+  /* Light grey background */
+  border-radius: 4px;
+  /* Rounds corners of the container */
+  overflow: hidden;
+  /* Ensures the progress doesn't overflow the container */
+  border: 1px solid var(--orange);
+}
+
+.progress-bar {
+  /* Progress bar color */
+  height: 100%;
+  /* Takes the full height of the container */
+  border-radius: 4px;
+  /* Rounds corners of the progress bar */
+  transition: width 0.3s ease;
+  /* Smooth transition for width changes */
+  background-color: var(--orange);
+}

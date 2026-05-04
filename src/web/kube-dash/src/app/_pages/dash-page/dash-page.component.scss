@@ -1,0 +1,347 @@
+.dashboard-container {
+  padding: 24px;
+  min-height: calc(100vh - 60px); // Account for header
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1920px;
+  margin: 0 auto;
+  width: 100%;
+  
+  // Add subtle background pattern for ultra-wide monitors
+  @media (min-width: 2560px) {
+    &::before, &::after {
+      content: '';
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+      width: calc((100vw - 1920px) / 2);
+      background: linear-gradient(90deg, 
+        var(--background) 0%, 
+        transparent 100%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    &::before {
+      left: 0;
+    }
+    
+    &::after {
+      right: 0;
+      transform: scaleX(-1);
+    }
+  }
+}
+
+.widget-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+  
+  .widget-row {
+    display: grid;
+    gap: 24px;
+    
+    &.stats-row {
+      grid-template-columns: 1fr;
+      
+      .cluster-widget {
+        height: auto;
+      }
+    }
+    
+    &.pods-row {
+      grid-template-columns: 1fr;
+      
+      .pods-widget {
+        min-height: 400px;
+        max-height: 600px;
+      }
+    }
+    
+    &.nodes-row {
+      grid-template-columns: 1fr;
+      
+      .nodes-widget {
+        min-height: 350px;
+      }
+    }
+  }
+  
+  // Tablet layout
+  &.tablet {
+    gap: 20px;
+    
+    .widget-row {
+      &.pods-row .pods-widget {
+        max-height: 500px;
+      }
+    }
+  }
+  
+  // Mobile layout
+  &.mobile {
+    gap: 16px;
+    
+    .widget-row {
+      gap: 16px;
+      
+      &.stats-row .cluster-widget {
+        height: auto;
+      }
+      
+      &.pods-row .pods-widget {
+        min-height: 300px;
+        max-height: 400px;
+      }
+      
+      &.nodes-row .nodes-widget {
+        min-height: 300px;
+      }
+    }
+  }
+}
+
+// Widget styling
+:host ::ng-deep {
+  .cluster-widget,
+  .pods-widget,
+  .nodes-widget {
+    background: var(--widget-background);
+    border: 1px solid var(--widget-border);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+    
+    // Subtle glow effect
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, 
+        rgba(6, 182, 212, 0.3) 0%, 
+        rgba(59, 130, 246, 0.2) 50%, 
+        rgba(139, 92, 246, 0.3) 100%);
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+    
+    &:hover {
+      background: var(--widget-background-hover);
+      border-color: var(--border-color-hover);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 
+        0 20px 48px rgba(0, 0, 0, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.2) inset;
+      
+      &::before {
+        opacity: 1;
+      }
+    }
+  }
+  
+  // Specific widget animations
+  .cluster-widget {
+    animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .pods-widget {
+    animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+  }
+  
+  .nodes-widget {
+    animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+  }
+}
+
+// Animations
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Loading state animation
+.widget-loading {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(6, 182, 212, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Responsive breakpoints
+@media (max-width: 1200px) {
+  .dashboard-container {
+    padding: 20px;
+    gap: 24px;
+  }
+  
+  .dashboard-header {
+    h1 {
+      font-size: 2.25rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+    gap: 20px;
+  }
+  
+  .dashboard-header {
+    h1 {
+      font-size: 1.875rem;
+    }
+    
+    p {
+      font-size: 0.875rem;
+    }
+  }
+  
+  :host ::ng-deep {
+    .cluster-widget,
+    .pods-widget,
+    .nodes-widget {
+      border-radius: 16px;
+      
+      &:hover {
+        transform: translateY(-2px) scale(1.01);
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .dashboard-header {
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    p {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Dark mode enhancements
+@media (prefers-color-scheme: dark) {
+  :host ::ng-deep {
+    .cluster-widget,
+    .pods-widget,
+    .nodes-widget {
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 1px 0 rgba(255, 255, 255, 0.05) inset;
+      
+      &:hover {
+        box-shadow: 
+          0 20px 48px rgba(0, 0, 0, 0.6),
+          0 1px 0 rgba(255, 255, 255, 0.1) inset;
+      }
+    }
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  :host ::ng-deep {
+    .cluster-widget,
+    .pods-widget,
+    .nodes-widget {
+      border-width: 2px;
+      
+      &:hover {
+        border-width: 3px;
+      }
+    }
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep {
+    .cluster-widget,
+    .pods-widget,
+    .nodes-widget {
+      transition: none;
+      animation: none;
+      
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+  
+  .widget-loading::after {
+    animation: none;
+  }
+}

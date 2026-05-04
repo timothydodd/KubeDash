@@ -1,0 +1,232 @@
+.cluster-overview-widget {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  
+  .header-icon {
+    color: var(--accent-blue);
+    width: 24px;
+    height: 24px;
+  }
+  
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+}
+
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  
+  lucide-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+  
+  p {
+    margin: 0 0 16px 0;
+    color: var(--foreground-muted);
+    font-size: 0.875rem;
+  }
+}
+
+.error-state {
+  .error-icon {
+    color: var(--k8s-failed);
+  }
+  
+  .retry-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: var(--surface);
+      border-color: var(--border-color-hover);
+    }
+    
+    lucide-icon {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+  }
+}
+
+.cluster-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--surface-elevated);
+    border-color: var(--border-color-hover);
+    transform: translateY(-2px);
+  }
+  
+  .metric-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    
+    lucide-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--foreground-muted);
+    }
+    
+    span {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--foreground-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  .metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  
+  .metric-label {
+    font-size: 0.75rem;
+    color: var(--foreground-muted);
+    margin: 0;
+  }
+  
+  // Specific metric colors
+  &.cpu-metric .metric-value {
+    color: var(--accent-cyan);
+  }
+  
+  &.memory-metric .metric-value {
+    color: var(--accent-purple);
+  }
+  
+  &.nodes-metric .metric-value {
+    color: var(--accent-blue);
+  }
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  .progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .progress-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground-secondary);
+        
+        lucide-icon {
+          width: 16px;
+          height: 16px;
+        }
+      }
+      
+      .progress-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
+      }
+    }
+    
+    .progress-bar-container {
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 8px;
+      
+      .progress-bar {
+        height: 100%;
+        border-radius: 8px;
+        transition: width 0.3s ease;
+        
+        &.cpu-progress {
+          background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+        }
+        
+        &.memory-progress {
+          background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .cluster-overview-widget {
+    padding: 20px;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  .metric-card {
+    padding: 12px;
+    
+    .metric-value {
+      font-size: 1.5rem;
+    }
+  }
+}

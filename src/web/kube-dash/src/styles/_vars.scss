@@ -1,0 +1,144 @@
+// Color system
+$color-contrast-dark: #000;
+$color-contrast-light: #fff;
+
+// scss-docs-start gray-color-variables
+$white: #fff;
+$gray-100: #eaeaeb;
+$gray-200: #d4d4d7;
+$gray-300: #bfbfc3;
+$gray-400: #a9aaaf;
+$gray-500: #696a72;
+$gray-600: #53555e;
+$gray-700: #3e3f4a;
+$gray-800: #282a36; // syntax highlight background
+$gray-900: #20222b;
+$black: #000;
+// scss-docs-end gray-color-variables
+
+// scss-docs-start color-variables
+$blue: #007e90;
+$indigo: #7e8ec2;
+$purple: #855fbf;
+$pink: #c13f8e;
+$red: #d82f39;
+$orange: #7d4800;
+$yellow: #4c5b00;
+$green: #006400;
+$teal: #005f60;
+$cyan: #005f60;
+// scss-docs-end color-variables
+
+// scss-docs-start theme-color-variables
+$primary: $purple;
+$secondary: $gray-600;
+$success: $green;
+$info: $cyan;
+$warning: $yellow;
+$danger: $red;
+$light: $gray-200;
+$dark: $gray-900;
+// scss-docs-end theme-color-variables
+
+// scss-docs-start color-variables-dark
+$blue-dark: #8be9fd;
+$indigo-dark: #6272a4;
+$purple-dark: #bd93f9;
+$pink-dark: #ff79c6;
+$red-dark: #f55;
+$orange-dark: #ffb86c;
+$yellow-dark: #f1fa8c;
+$green-dark: #50fa7b;
+$teal-dark: #a4ffff;
+$cyan-dark: #a4ffff;
+// scss-docs-end color-variables-dark
+
+// scss-docs-start theme-color-dark-variables
+$primary-dark: $purple-dark;
+$secondary-dark: $gray-500;
+$success-dark: $green-dark;
+$info-dark: $cyan-dark;
+$warning-dark: $yellow-dark;
+$danger-dark: $red-dark;
+// scss-docs-end theme-color-dark-variables
+
+// Shiki
+// Only applied if using a defined Shiki theme
+
+$ng-select-input-text: #f8f8f2;
+$ng-select-highlight: #bd93f9;
+$ng-select-primary-text: #f8f8f2;
+$ng-select-disabled-text: #f9f9f9;
+$ng-select-border: #191a21;
+$ng-select-bg: #424450;
+$ng-select-selected: #343746;
+
+@function darken($color, $percentage) {
+  @return mix(#000, $color, $percentage);
+}
+
+@function lighten($color, $percentage) {
+  @return mix(white, $color, $percentage);
+}
+
+@function hexToRGBString($hexColor) {
+  @return "#{red($hexColor)},#{green($hexColor)},#{blue($hexColor)}";
+}
+$darkBack: #191a21;
+:root {
+  // Modern Kubernetes-inspired color scheme
+  --background: #0f1419;
+  --background-secondary: #1a1f2e;
+  --background-tertiary: #252a3d;
+  --surface: #1e2433;
+  --surface-elevated: #2a3441;
+  
+  --foreground: #f8fafc;
+  --foreground-secondary: #cbd5e1;
+  --foreground-muted: #94a3b8;
+  
+  // Kubernetes status colors
+  --k8s-running: #10b981;     // Green - healthy/running
+  --k8s-pending: #f59e0b;     // Amber - pending/waiting  
+  --k8s-failed: #ef4444;      // Red - failed/error
+  --k8s-unknown: #6b7280;     // Gray - unknown status
+  --k8s-warning: #f97316;     // Orange - warnings
+  --k8s-terminating: #8b5cf6; // Purple - terminating
+  
+  // Accent colors
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  
+  // UI colors
+  --border-color: rgba(148, 163, 184, 0.2);
+  --border-color-hover: rgba(148, 163, 184, 0.3);
+  --glass-bg: rgba(30, 36, 51, 0.8);
+  --glass-bg-hover: rgba(42, 52, 65, 0.9);
+  
+  // Widget backgrounds
+  --widget-background: rgba(30, 36, 51, 0.6);
+  --widget-background-hover: rgba(42, 52, 65, 0.8);
+  --widget-border: rgba(148, 163, 184, 0.15);
+  
+  // Legacy compatibility
+  --current-line: var(--surface);
+  --comment: var(--foreground-muted);
+  --cyan: var(--accent-cyan);
+  --green: var(--k8s-running);
+  --orange: var(--k8s-warning);
+  --pink: var(--accent-pink);
+  --purple: var(--accent-purple);
+  --red: var(--k8s-failed);
+  --yellow: var(--k8s-pending);
+  --primary: var(--foreground);
+  --header-bg: var(--glass-bg);
+}
+
+$ng-select-dropdown-optgroup-marked: $ng-select-input-text;
+
+$ng-select-marked-text: $ng-select-primary-text;
+$ng-select-dropdown-optgroup-text: $ng-select-primary-text;
+$ng-select-dropdown-option-text: $ng-select-primary-text;
+$ng-select-dropdown-optgroup-marked: $ng-select-input-text;

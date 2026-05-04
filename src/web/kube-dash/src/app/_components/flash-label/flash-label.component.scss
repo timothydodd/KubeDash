@@ -1,0 +1,11 @@
+:host {
+  display: contents;
+
+  .fade-container {
+    transition: background-color 1s ease;
+  }
+
+  .fade-container.updated {
+    background-color: black;
+  }
+}

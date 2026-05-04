@@ -1,0 +1,86 @@
+<div class="cluster-overview-widget">
+  <div class="widget-header">
+    <lucide-icon name="activity" class="header-icon" />
+    <h3>Cluster Overview</h3>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <app-loading-spinner />
+      <p>Loading cluster metrics...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <lucide-icon name="alert-circle" class="error-icon" />
+      <p>{{ error() }}</p>
+      <button (click)="retry()" class="retry-btn">
+        <lucide-icon name="refresh-cw" />
+        Retry
+      </button>
+    </div>
+  } @else if (cluster()) {
+    <div class="cluster-metrics">
+      <div class="metrics-grid">
+        <div class="metric-card cpu-metric">
+          <div class="metric-header">
+            <lucide-icon name="cpu" />
+            <span>CPU</span>
+          </div>
+          <div class="metric-value">{{ cpuUsagePercent() }}%</div>
+          <p class="metric-label">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</p>
+        </div>
+
+        <div class="metric-card memory-metric">
+          <div class="metric-header">
+            <lucide-icon name="memory-stick" />
+            <span>Memory</span>
+          </div>
+          <div class="metric-value">{{ memoryUsagePercent() }}%</div>
+          <p class="metric-label">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</p>
+        </div>
+
+        <div class="metric-card nodes-metric">
+          <div class="metric-header">
+            <lucide-icon name="server" />
+            <span>Nodes</span>
+          </div>
+          <div class="metric-value">{{ nodeCount() }}</div>
+          <p class="metric-label">Active Nodes</p>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-item">
+          <div class="progress-header">
+            <div class="progress-label">
+              <lucide-icon name="cpu" />
+              <span>CPU Usage</span>
+            </div>
+            <div class="progress-value">{{ cpuUsagePercent() }}%</div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar cpu-progress" [style.width.%]="cpuUsagePercent()"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-header">
+            <div class="progress-label">
+              <lucide-icon name="memory-stick" />
+              <span>Memory Usage</span>
+            </div>
+            <div class="progress-value">{{ memoryUsagePercent() }}%</div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar memory-progress" [style.width.%]="memoryUsagePercent()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="loading-state">
+      <lucide-icon name="server" />
+      <p>No cluster data available</p>
+    </div>
+  }
+</div>

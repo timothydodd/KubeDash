@@ -1,0 +1,279 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+
+  .container-t {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 20px;
+    width: 100%;
+  }
+
+  .thermostat-header {
+    text-align: center;
+
+    .room-name {
+      margin: 0 0 12px 0;
+      color: var(--orange);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .current-status {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      align-items: center;
+
+      .current-temp {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--cyan);
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+
+      .system-state {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+
+        &.active {
+          background: var(--orange);
+          color: #000;
+          border-color: var(--orange);
+        }
+      }
+    }
+  }
+
+  .temperature-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 30px 20px;
+
+    .temp-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+
+      .set-temp {
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--purple);
+        text-shadow: 0 2px 8px rgba(189, 147, 249, 0.3);
+        line-height: 1;
+      }
+
+      .target-label {
+        font-size: 1rem;
+        color: var(--foreground);
+        opacity: 0.7;
+        font-weight: 500;
+      }
+    }
+
+    .temp-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      .temp-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &.decrease:hover:not(:disabled) {
+          background: var(--red);
+          border-color: var(--red);
+          color: white;
+          transform: scale(1.1);
+        }
+
+        &.increase:hover:not(:disabled) {
+          background: var(--green);
+          border-color: var(--green);
+          color: white;
+          transform: scale(1.1);
+        }
+
+        &:active:not(:disabled) {
+          transform: scale(0.95);
+        }
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .control-group {
+    .control-label {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--orange);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .mode-buttons,
+    .fan-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn,
+    .fan-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px 18px;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      min-width: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      &.active {
+        background: linear-gradient(135deg, rgba(189, 147, 249, 0.15) 0%, rgba(189, 147, 249, 0.08) 100%);
+        border-color: rgba(189, 147, 249, 0.4);
+        color: rgba(189, 147, 249, 0.9);
+        box-shadow: 0 2px 8px rgba(189, 147, 249, 0.2);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      span {
+        font-size: 0.95rem;
+      }
+    }
+
+    .fan-btn {
+      min-width: 110px;
+    }
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  :host {
+    .container-t {
+      padding: 15px;
+      gap: 20px;
+    }
+
+    .thermostat-header .room-name {
+      font-size: 1.3rem;
+    }
+
+    .temperature-section {
+      padding: 25px 15px;
+
+      .temp-display .set-temp {
+        font-size: 3.5rem;
+      }
+
+      .temp-controls .temp-btn {
+        width: 55px;
+        height: 55px;
+      }
+    }
+
+    .control-group {
+      .mode-btn,
+      .fan-btn {
+        padding: 12px 16px;
+        min-width: 80px;
+        font-size: 0.9rem;
+        gap: 6px;
+      }
+
+      .fan-btn {
+        min-width: 95px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    .temperature-section {
+      .temp-display .set-temp {
+        font-size: 3rem;
+      }
+
+      .temp-controls .temp-btn {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    .control-group {
+      .mode-buttons,
+      .fan-buttons {
+        gap: 8px;
+      }
+
+      .mode-btn,
+      .fan-btn {
+        padding: 10px 14px;
+        min-width: 70px;
+        font-size: 0.85rem;
+      }
+
+      .fan-btn {
+        min-width: 85px;
+      }
+    }
+  }
+}

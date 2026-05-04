@@ -1,0 +1,79 @@
+@mixin border-radius($pixel...) {
+  border-radius: $pixel;
+}
+
+// Glass morphism effect mixin
+@mixin glass-morphism($opacity-start: 0.08, $opacity-end: 0.04, $border-opacity: 0.1, $radius: 16px) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, $opacity-start) 0%, rgba(255, 255, 255, $opacity-end) 100%);
+  border: 1px solid rgba(255, 255, 255, $border-opacity);
+  border-radius: $radius;
+  backdrop-filter: blur(10px);
+}
+
+// Glass morphism hover effect
+@mixin glass-morphism-hover($opacity-start: 0.12, $opacity-end: 0.06, $border-opacity: 0.2) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, $opacity-start) 0%, rgba(255, 255, 255, $opacity-end) 100%);
+  border-color: rgba(255, 255, 255, $border-opacity);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+// Flex center mixin
+@mixin flex-center($gap: 8px) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $gap;
+}
+
+// Flex row center mixin
+@mixin flex-row-center($gap: 8px) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $gap;
+}
+
+// Auto-fit grid mixin
+@mixin auto-fit-grid($min-width: 160px, $gap: 8px) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+// Text ellipsis mixin
+@mixin text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Label text style mixin
+@mixin label-text($size: 0.75rem, $opacity: 0.7) {
+  font-size: $size;
+  color: rgba(255, 255, 255, $opacity);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+// Header text style mixin
+@mixin header-text($color: var(--orange)) {
+  color: $color;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Standard transition mixin
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+// Circular element mixin
+@mixin circle($size: 50px) {
+  width: $size;
+  height: $size;
+  border-radius: 50%;
+  @include flex-center;
+}

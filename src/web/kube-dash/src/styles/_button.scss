@@ -1,0 +1,384 @@
+.btn {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+}
+.btn.btn-icon {
+  border: none;
+  background-color: unset;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: unset;
+  margin: unset;
+  display: grid;
+  place-items: center;
+}
+
+.btn {
+  padding: 0.375rem 0.75rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+
+  &:disabled {
+    opacity: 0.65;
+    pointer-events: none;
+  }
+}
+
+.btn-primary {
+  color: var(--foreground);
+  background-color: var(--purple);
+  border-color: var(--purple);
+
+  &:hover {
+    background-color: var(--darkGreen);
+    border-color: var(--darkGreen);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--purple-rgb), 0.5);
+  }
+}
+
+.btn-secondary {
+  color: var(--foreground);
+  background-color: var(--gray);
+  border-color: var(--gray);
+
+  &:hover {
+    background-color: var(--bGLight);
+    border-color: var(--bGLight);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bGDarker-rgb), 0.5);
+  }
+}
+
+.btn-outline-primary {
+  color: var(--purple);
+  border-color: var(--purple);
+
+  &:hover {
+    color: var(--foreground);
+    background-color: var(--purple);
+    border-color: var(--purple);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--purple-rgb), 0.5);
+  }
+}
+
+.btn-outline-secondary {
+  color: var(--gray);
+  border-color: var(--gray);
+
+  &:hover {
+    color: var(--foreground);
+    background-color: var(--gray);
+    border-color: var(--gray);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bGDarker-rgb), 0.5);
+  }
+}
+
+.btn-outline-danger {
+  color: var(--red);
+  border-color: var(--red);
+
+  &:hover {
+    color: var(--foreground);
+    background-color: var(--red);
+    border-color: var(--red);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--red-rgb), 0.5);
+  }
+}
+
+.btn-close {
+  box-sizing: content-box;
+  width: 1em;
+  height: 1em;
+  padding: 0.25em 0.25em;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  border-radius: 0.375rem;
+  opacity: 0.5;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--red);
+    text-decoration: none;
+    opacity: 0.75;
+  }
+
+  &:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(var(--purple-rgb), 0.25);
+    opacity: 1;
+  }
+
+  &::before {
+    content: "×";
+    font-size: 1.5em;
+    line-height: 1;
+  }
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+}
+
+.btn-light {
+  color: var(--background);
+  background-color: var(--foreground);
+  border-color: var(--foreground);
+
+  &:hover {
+    background-color: var(--bGLighter);
+    border-color: var(--bGLighter);
+    color: var(--foreground);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bGDarker-rgb), 0.5);
+  }
+}
+
+.btn-group {
+  display: inline-flex;
+  vertical-align: middle;
+
+  .btn {
+    position: relative;
+    flex: 1 1 auto;
+
+    &:not(:first-child) {
+      margin-left: -1px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    &:not(:last-child) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+}
+.btn.btn-icon:hover {
+  color: var(--bs-primary);
+  border: none;
+  background-color: unset;
+}
+
+.image-button {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+
+.image-button img {
+  display: block;
+  max-width: 100%;
+  /* Makes the image responsive */
+}
+
+.btn-link {
+  cursor: pointer;
+  padding: 0;
+  background-color: transparent;
+  text-decoration: underline;
+  border: none;
+}
+
+.btn-no-border {
+  cursor: pointer;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+}
+
+// Glass morphism button styles
+.btn-glass {
+  @include glass-morphism(0.08, 0.04, 0.15, 8px);
+  @include transition(all, 0.2s);
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:hover {
+    @include glass-morphism-hover(0.12, 0.06, 0.25);
+    color: white;
+  }
+
+  &.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+// Circular glass button
+.btn-glass-circle {
+  @extend .btn-glass;
+  @include circle;
+  padding: 0;
+
+  &.btn-sm {
+    @include circle(32px);
+  }
+
+  &.btn-lg {
+    @include circle(60px);
+  }
+}
+
+// Mode toggle buttons (like thermostat modes)
+.btn-mode {
+  @include glass-morphism(0.06, 0.03, 0.1, 6px);
+  @include transition(all, 0.2s);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    @include glass-morphism-hover(0.1, 0.05, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  &.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+    box-shadow: 0 4px 16px rgba(189, 147, 249, 0.3);
+  }
+}
+
+// Switch card button (like device toggles)
+.btn-switch {
+  @include glass-morphism;
+  @include transition;
+  @include flex-row-center(12px);
+  padding: 16px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    @include glass-morphism-hover;
+  }
+
+  &.active {
+    border-color: var(--green);
+    box-shadow: 0 4px 16px rgba(80, 250, 123, 0.2);
+  }
+
+  .device-name {
+    @include header-text(var(--foreground));
+    @include text-ellipsis;
+    flex: 1;
+  }
+
+  .device-status {
+    @include label-text(0.7rem);
+    color: var(--green);
+  }
+}
+
+// Device toggle button (used in widget cards)
+.device-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 8px;
+  padding: 0;
+
+  &:hover {
+    .device-name {
+      color: rgba(80, 250, 123, 0.6);
+    }
+  }
+}
+
+// Device name styling for toggle buttons
+.device-name {
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+
+// Status label for on/off states
+.status-label {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  min-width: 35px;
+  text-align: center;
+
+  &.on {
+    background: var(--green);
+    color: #000;
+    border-color: var(--green);
+  }
+}

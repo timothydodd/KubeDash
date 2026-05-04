@@ -1,0 +1,47 @@
+.tabs-container {
+  .tab-nav {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+
+    .tab-link {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+      position: relative;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &.active {
+        color: var(--cyan);
+        border-bottom-color: var(--cyan);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      &:first-child {
+        border-top-left-radius: 8px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 8px;
+      }
+    }
+  }
+
+  .tab-content {
+    .tab-pane {
+      &.active {
+        display: block;
+      }
+    }
+  }
+}

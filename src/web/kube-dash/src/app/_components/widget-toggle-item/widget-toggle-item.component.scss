@@ -1,0 +1,65 @@
+.widget-item {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 212, 255, 0.15);
+  }
+
+  &:focus {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: none; // Prevent child elements from interfering with click
+}
+
+.widget-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.widget-icon {
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.widget-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.widget-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--comment);
+  opacity: 0.8;
+}
+
+.form-switch {
+  margin: 0;
+  padding-left: 2.5rem;
+  pointer-events: auto; // Re-enable pointer events for the switch
+
+  .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+  }
+}

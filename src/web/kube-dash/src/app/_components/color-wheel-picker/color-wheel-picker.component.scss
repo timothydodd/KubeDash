@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.color-wheel-container {
+  display: inline-block;
+  position: relative;
+  cursor: crosshair;
+}
+
+.color-wheel {
+  position: relative;
+  overflow: visible;
+  display: block;
+}
+
+.wheel-hue,
+.wheel-saturation,
+.wheel-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.wheel-hue {
+  transform: rotateZ(0deg);
+  background: conic-gradient(red 0deg, yellow 60deg, lime 120deg, aqua 180deg, blue 240deg, magenta 300deg, red 360deg);
+}
+
+.wheel-saturation {
+  background: radial-gradient(circle closest-side, rgb(255, 255, 255), transparent);
+}
+
+.wheel-border {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.2),
+    inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.wheel-handle {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  will-change: transform;
+  transition: transform 0.1s ease-out;
+  pointer-events: none;
+
+  &.active {
+    transition: none;
+  }
+
+  circle {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+}
+
+// Cyberpunk glow effect on hover
+.color-wheel-container:hover .wheel-border {
+  border-color: rgba(0, 212, 255, 0.3);
+  box-shadow:
+    0 0 30px rgba(0, 212, 255, 0.4),
+    inset 0 0 30px rgba(0, 212, 255, 0.2);
+}

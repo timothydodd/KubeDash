@@ -1,0 +1,31 @@
+.gap20 {
+  gap: 20px;
+}
+
+.gap10 {
+  gap: 10px;
+}
+
+.flex-column {
+  flex-direction: column;
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+  display: flex;
+}
+
+.align-self-center {
+  align-self: center;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+.align-self-end {
+  align-self: end;
+}
+.align-self-start {
+  align-self: start;
+}

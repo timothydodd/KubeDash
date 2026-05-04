@@ -1,0 +1,71 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use "../src/styles/vars" as *;
+@use "../src/styles/mixins" as *;
+
+@import "../node_modules/ngx-toastr/toastr";
+@import "../node_modules/@ng-select/ng-select/scss/default.theme.scss";
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+@import "../src/styles/ng-select.scss";
+@import "../src/styles/button";
+@import "../src/styles/forms";
+@import "../src/styles/modal";
+@import "../src/styles/scaffolding";
+@import "../src/styles/utilities";
+
+html {
+  //background-color: var(--background);
+  color: var(--foreground);
+
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+
+  /* Prevent mobile scrolling issues */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* iOS specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS safe area support */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  body {
+    //   background-color: var(--background);
+
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+
+    /* Fix iOS viewport height issues */
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    /* Prevent zoom on input focus */
+    -webkit-text-size-adjust: 100%;
+
+    /* Prevent pull-to-refresh */
+    overscroll-behavior-y: contain;
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: white;
+  }
+  lucide-icon {
+    display: flex;
+    align-items: center;
+  }
+  *,
+  *:before,
+  *:after {
+    box-sizing: border-box;
+  }
+}
