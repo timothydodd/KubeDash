@@ -46,7 +46,7 @@ interface PodInfo {
         <div class="control flex-grow">
           <label>Pod</label>
           <select [(ngModel)]="selectedPod" (ngModelChange)="onPodChange()">
-            <option [ngValue]="null">— Select a pod —</option>
+            <option [ngValue]="null">-- Select a pod --</option>
             @for (p of filteredPods(); track p.namespace + '/' + p.name) {
               <option [ngValue]="p">{{ p.namespace }} / {{ p.name }}</option>
             }
@@ -54,7 +54,7 @@ interface PodInfo {
         </div>
         <div class="control">
           <label>Search</label>
-          <input type="text" [(ngModel)]="search" placeholder="Filter lines…" />
+          <input type="text" [(ngModel)]="search" placeholder="Filter lines..." />
         </div>
         <button class="btn" (click)="clear()" title="Clear logs">
           <lucide-icon name="trash-2" /> Clear
@@ -78,7 +78,7 @@ interface PodInfo {
         @if (feed().length === 0) {
           <div class="empty">
             @if (selectedPod()) {
-              <span>Waiting for log output…</span>
+              <span>Waiting for log output...</span>
             } @else {
               <span>Select a pod above to start streaming.</span>
             }
@@ -153,8 +153,8 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     const today = now.toDateString();
     const yesterday = new Date(now.getTime() - 86400_000).toDateString();
     const key = d.toDateString();
-    if (key === today) return `Today · ${d.toLocaleDateString()}`;
-    if (key === yesterday) return `Yesterday · ${d.toLocaleDateString()}`;
+    if (key === today) return `Today  ${d.toLocaleDateString()}`;
+    if (key === yesterday) return `Yesterday  ${d.toLocaleDateString()}`;
     return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
