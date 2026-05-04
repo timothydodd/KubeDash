@@ -1,17 +1,27 @@
+using KubeDashApi.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace KubeDashApi.Hubs;
 
 public class KubernetesDashboardHub : Hub
 {
+    private readonly ClusterWatchManager _watchManager;
+
+    public KubernetesDashboardHub(ClusterWatchManager watchManager)
+    {
+        _watchManager = watchManager;
+    }
+
     public override async Task OnConnectedAsync()
     {
+        _watchManager.AddSubscriber();
         await base.OnConnectedAsync();
         await Clients.Caller.SendAsync("Connected", Context.ConnectionId);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _watchManager.RemoveSubscriber();
         await base.OnDisconnectedAsync(exception);
     }
 
