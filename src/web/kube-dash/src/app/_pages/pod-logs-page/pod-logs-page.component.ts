@@ -224,9 +224,12 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   }
 
   feed = computed<FeedRow[]>(() => {
+    // Render newest first; date dividers sit above the most-recent line of each day.
+    const source = this.visibleLogs();
     const rows: FeedRow[] = [];
     let lastDay = '';
-    for (const log of this.visibleLogs()) {
+    for (let i = source.length - 1; i >= 0; i--) {
+      const log = source[i];
       const d = log.timeStamp instanceof Date ? log.timeStamp : new Date(log.timeStamp as any);
       const dayKey = d.toDateString();
       if (dayKey !== lastDay) {
