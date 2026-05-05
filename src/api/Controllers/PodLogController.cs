@@ -1,4 +1,5 @@
 using k8s;
+using KubeDashApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -63,7 +64,22 @@ public class PodLogController : ControllerBase
                     sinceSeconds: sinceSeconds);
                 using var reader = new StreamReader(resp.Body);
                 var text = await reader.ReadToEndAsync();
-                lines.AddRange(text.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+                foreach (var rawLine in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    // Preserve "<timestamp> " prefix (frontend strips it for display)
+                    // but clean inline level/time/ANSI noise from the message body.
+                    var spaceIdx = rawLine.IndexOf(' ');
+                    if (spaceIdx > 0)
+                    {
+                        var ts = rawLine.Substring(0, spaceIdx);
+                        var body = LogLineCleaner.Clean(rawLine.Substring(spaceIdx + 1));
+                        lines.Add($"{ts} {body}");
+                    }
+                    else
+                    {
+                        lines.Add(LogLineCleaner.Clean(rawLine));
+                    }
+                }
             }
             return Ok(new { lines });
         }

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using k8s;
 using Microsoft.AspNetCore.SignalR;
+using KubeDashApi.Common;
 using KubeDashApi.Hubs;
 
 namespace KubeDashApi.Services;
@@ -142,12 +143,16 @@ public sealed class PodLogStreamService : IAsyncDisposable
             content = raw.Substring(spaceIdx + 1);
         }
 
+        // Detect level from the raw content first (regex catches "info:", "[INFO]", etc.)
         var level = "Information";
         var upper = content.ToUpperInvariant();
         if (upper.Contains("ERROR") || upper.Contains("EXCEPTION") || upper.Contains("FATAL")) level = "Error";
         else if (upper.Contains("WARN")) level = "Warning";
         else if (upper.Contains("DEBUG")) level = "Debug";
         else if (upper.Contains("TRACE")) level = "Trace";
+
+        // Strip ANSI codes and leading "13:24:54 info:" style prefixes for display.
+        content = LogLineCleaner.Clean(content);
 
         return new PodLogLine(
             Id: Interlocked.Increment(ref _sequence),
