@@ -3,5 +3,5 @@ export const environment = {
   cache: {
     logging: false,
   },
-  apiUrl: '${API_URL}',
+  apiUrl: '',
 };
