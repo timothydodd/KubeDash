@@ -219,11 +219,21 @@
   .log-line {
     display: flex;
     gap: 12px;
-    padding: 2px 14px;
+    padding: 4px 14px;
+    margin: 0 8px 2px;
+    border-radius: 4px;
+    background: rgba(40, 42, 54, 0.35);
+    border-left: 2px solid transparent;
     white-space: pre-wrap;
     word-break: break-word;
+    transition: background-color 0.15s ease;
 
-    &:hover { background: rgba(255, 255, 255, 0.03); }
+    &:hover { background: rgba(40, 42, 54, 0.6); }
+
+    &[data-level="error"]   { border-left-color: rgba(255, 85, 85, 0.5); }
+    &[data-level="warning"] { border-left-color: rgba(241, 250, 140, 0.5); }
+    &[data-level="debug"],
+    &[data-level="trace"]   { border-left-color: rgba(98, 114, 164, 0.5); }
 
     .ts {
       flex-shrink: 0;
