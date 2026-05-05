@@ -1,6 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, skip } from 'rxjs';
+import { ChangeDetectionStrategy, Component, effect, input, signal, untracked } from '@angular/core';
 
 @Component({
   selector: 'app-flash-label',
@@ -14,9 +12,14 @@ export class FlashLabelComponent {
   isUpdated = signal<boolean>(false);
 
   constructor() {
-    toObservable(this.value)
-      .pipe(distinctUntilChanged(), skip(1), takeUntilDestroyed())
-      .subscribe(() => this.isUpdated.set(true));
+    let previous: string | number | undefined;
+    effect(() => {
+      const next = this.value();
+      if (previous !== undefined && next !== previous) {
+        untracked(() => this.isUpdated.set(true));
+      }
+      previous = next;
+    });
   }
 
   resetUpdate() {
