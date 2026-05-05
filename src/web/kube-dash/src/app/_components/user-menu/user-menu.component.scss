@@ -6,23 +6,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
   border-radius: 8px;
   color: var(--on-surface);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
   font-size: 14px;
   font-weight: 500;
-  min-width: 140px;
-  justify-content: space-between;
 
   &:hover {
-    background: var(--surface-variant);
-    border-color: var(--border-color-light);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--hover-bg, rgba(255, 255, 255, 0.06));
   }
 
   .user-avatar {

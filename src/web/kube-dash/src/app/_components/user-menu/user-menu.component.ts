@@ -17,7 +17,6 @@ import { ClickOutsideDirective } from '../../_services/click-outside.directive';
           <lucide-icon name="user" size="18"></lucide-icon>
         </div>
         <span class="user-name">{{ user()?.userName ?? username() ?? 'Account' }}</span>
-        <lucide-icon name="chevron-down" size="16" [class.rotated]="isOpen()"></lucide-icon>
       </button>
 
       @if (isOpen()) {

@@ -6,6 +6,7 @@ import { DynamicBackgroundDirective } from './_directives/dynamic-background';
 import { EffectBackgroundDirective } from './_directives/effect-background';
 import { UserMenuComponent } from './_components/user-menu/user-menu.component';
 import { ConnectionStatusComponent } from './_components/connection-status/connection-status.component';
+import { ClusterStripComponent } from './_components/cluster-strip/cluster-strip.component';
 import { AuthService } from './_services/auth-service';
 
 @Component({
@@ -20,6 +21,7 @@ import { AuthService } from './_services/auth-service';
     EffectBackgroundDirective,
     UserMenuComponent,
     ConnectionStatusComponent,
+    ClusterStripComponent,
   ],
   template: `
     <div class="app-container" appDynamicBackground>
@@ -38,7 +40,7 @@ import { AuthService } from './_services/auth-service';
             </a>
           </nav>
           @if (auth.isAuthenticated()) {
-            <div class="header-spacer"></div>
+            <app-cluster-strip />
             <app-user-menu />
           }
         </header>

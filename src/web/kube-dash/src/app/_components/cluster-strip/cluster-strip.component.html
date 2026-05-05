@@ -1,0 +1,30 @@
+@if (cluster(); as c) {
+  <div class="cluster-strip" role="status" aria-label="Cluster metrics">
+    <div class="group cluster">
+      <span class="label">Cluster</span>
+      <span class="metric" [attr.data-tone]="pctTone(cpuPct())" title="CPU usage">
+        <lucide-icon name="cpu" />
+        <span class="val">{{ cpuPct() }}%</span>
+      </span>
+      <span class="metric" [attr.data-tone]="pctTone(memPct())" title="Memory usage">
+        <lucide-icon name="memory-stick" />
+        <span class="val">{{ memPct() }}%</span>
+      </span>
+    </div>
+
+    @for (n of nodes(); track n.name) {
+      <span class="sep" aria-hidden="true">|</span>
+      <div class="group node">
+        <span class="label" [title]="n.name">{{ n.name }}</span>
+        <span class="metric" [attr.data-tone]="pctTone(round(n.cpuPercentage))" title="CPU">
+          <lucide-icon name="cpu" />
+          <span class="val">{{ round(n.cpuPercentage) }}%</span>
+        </span>
+        <span class="metric" [attr.data-tone]="pctTone(round(n.memoryPercentage))" title="Memory">
+          <lucide-icon name="memory-stick" />
+          <span class="val">{{ round(n.memoryPercentage) }}%</span>
+        </span>
+      </div>
+    }
+  </div>
+}

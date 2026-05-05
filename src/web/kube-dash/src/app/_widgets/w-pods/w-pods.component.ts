@@ -43,27 +43,6 @@ const STATUS_FILTERS = [
   imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent, FlashLabelComponent],
   template: `
     <div class="pods-widget">
-      <div class="widget-header">
-        <div class="header-content">
-          <lucide-icon name="package" class="header-icon" />
-          <h3>Pods</h3>
-        </div>
-        <div class="header-stats">
-          <span class="stat-item">
-            <lucide-icon name="check-circle" class="stat-icon running" />
-            <app-flash-label [value]="runningCount()" />
-          </span>
-          <span class="stat-item">
-            <lucide-icon name="clock" class="stat-icon pending" />
-            <app-flash-label [value]="pendingCount()" />
-          </span>
-          <span class="stat-item">
-            <lucide-icon name="x-circle" class="stat-icon failed" />
-            <app-flash-label [value]="failedCount()" />
-          </span>
-        </div>
-      </div>
-
       @if (loading()) {
         <div class="loading-state">
           <app-loading-spinner />
