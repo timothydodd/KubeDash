@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -18,6 +18,15 @@ interface LogCounts {
 
 type SortKey = 'name' | 'namespace' | 'status' | 'cpu' | 'memory' | 'age' | 'errors';
 type SortDir = 'asc' | 'desc';
+
+const PODS_FILTER_KEY = 'kubedash:pods-widget-filters';
+interface PersistedPodsFilters {
+  search?: string;
+  namespace?: string;
+  status?: string;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+}
 
 const STATUS_FILTERS = [
   { label: 'All statuses', value: '' },
@@ -345,6 +354,41 @@ export class WPodsComponent implements OnInit, OnDestroy {
   failedCount = computed(() => 
     this.pods().filter(pod => pod.status?.phase === 'Failed').length
   );
+
+  constructor() {
+    this.restoreFilters();
+    effect(() => this.persistFilters());
+  }
+
+  private restoreFilters() {
+    try {
+      const raw = localStorage.getItem(PODS_FILTER_KEY);
+      if (!raw) return;
+      const f = JSON.parse(raw) as PersistedPodsFilters;
+      if (typeof f.search === 'string') this.searchText.set(f.search);
+      if (typeof f.namespace === 'string') this.selectedNamespace.set(f.namespace);
+      if (typeof f.status === 'string') this.selectedStatus.set(f.status);
+      if (f.sortKey) this.sortKey.set(f.sortKey);
+      if (f.sortDir) this.sortDir.set(f.sortDir);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private persistFilters() {
+    const f: PersistedPodsFilters = {
+      search: this.searchText(),
+      namespace: this.selectedNamespace(),
+      status: this.selectedStatus(),
+      sortKey: this.sortKey(),
+      sortDir: this.sortDir(),
+    };
+    try {
+      localStorage.setItem(PODS_FILTER_KEY, JSON.stringify(f));
+    } catch {
+      /* ignore */
+    }
+  }
 
   ngOnInit() {
     this.loadPods();
