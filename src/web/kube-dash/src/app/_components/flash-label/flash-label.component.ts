@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, skip } from 'rxjs';
 
 @Component({
   selector: 'app-flash-label',
   imports: [],
-  template: `<div class="fade-container" [class.updated]="isUpdated()" (animationend)="resetUpdate()">
-    {{ value() }}
-  </div> `,
+  template: `<span class="fade-container" [class.updated]="isUpdated()" (animationend)="resetUpdate()">{{ value() }}</span>`,
   styleUrl: './flash-label.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -16,15 +15,8 @@ export class FlashLabelComponent {
 
   constructor() {
     toObservable(this.value)
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => {
-        this.isUpdated.set(true);
-
-        // Optionally, clear the flag after some time for repeated updates
-        setTimeout(() => {
-          this.isUpdated.set(false);
-        }, 1000); // Matches the CSS transition duration
-      });
+      .pipe(distinctUntilChanged(), skip(1), takeUntilDestroyed())
+      .subscribe(() => this.isUpdated.set(true));
   }
 
   resetUpdate() {

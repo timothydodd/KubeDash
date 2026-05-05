@@ -8,15 +8,15 @@
       <div class="header-kpis">
         <span class="kpi" title="CPU usage">
           <lucide-icon name="cpu" />
-          {{ cpuUsagePercent() }}%
+          <app-flash-label [value]="cpuUsagePercent() + '%'" />
         </span>
         <span class="kpi" title="Memory usage">
           <lucide-icon name="memory-stick" />
-          {{ memoryUsagePercent() }}%
+          <app-flash-label [value]="memoryUsagePercent() + '%'" />
         </span>
         <span class="kpi" title="Nodes">
           <lucide-icon name="server" />
-          {{ nodeCount() }}
+          <app-flash-label [value]="nodeCount()" />
         </span>
       </div>
     }
@@ -42,14 +42,18 @@
         <div class="meter">
           <div class="meter-head">
             <span><lucide-icon name="cpu" /> CPU</span>
-            <span class="meter-value">{{ formatCPU(cluster()!.cpuUsage) }} / {{ formatCPU(cluster()!.cpuTotal) }}</span>
+            <span class="meter-value">
+              <app-flash-label [value]="formatCPU(cluster()!.cpuUsage) + ' / ' + formatCPU(cluster()!.cpuTotal)" />
+            </span>
           </div>
           <div class="bar-track"><div class="bar-fill cpu" [style.width.%]="cpuUsagePercent()"></div></div>
         </div>
         <div class="meter">
           <div class="meter-head">
             <span><lucide-icon name="memory-stick" /> Memory</span>
-            <span class="meter-value">{{ formatMemory(cluster()!.memoryUsage) }} / {{ formatMemory(cluster()!.memoryTotal) }}</span>
+            <span class="meter-value">
+              <app-flash-label [value]="formatMemory(cluster()!.memoryUsage) + ' / ' + formatMemory(cluster()!.memoryTotal)" />
+            </span>
           </div>
           <div class="bar-track"><div class="bar-fill mem" [style.width.%]="memoryUsagePercent()"></div></div>
         </div>
@@ -67,7 +71,7 @@
             <div class="node-card-meter">
               <div class="meter-row">
                 <span class="meter-label"><lucide-icon name="cpu" /> CPU</span>
-                <span class="meter-pct">{{ round(n.cpuPercentage) }}%</span>
+                <span class="meter-pct"><app-flash-label [value]="round(n.cpuPercentage) + '%'" /></span>
               </div>
               <div class="bar-track small"><div class="bar-fill cpu" [style.width.%]="round(n.cpuPercentage)"></div></div>
             </div>
@@ -75,7 +79,7 @@
             <div class="node-card-meter">
               <div class="meter-row">
                 <span class="meter-label"><lucide-icon name="memory-stick" /> Memory</span>
-                <span class="meter-pct">{{ round(n.memoryPercentage) }}% | {{ formatMemory(n.memoryUsage) }}</span>
+                <span class="meter-pct"><app-flash-label [value]="round(n.memoryPercentage) + '% | ' + formatMemory(n.memoryUsage)" /></span>
               </div>
               <div class="bar-track small"><div class="bar-fill mem" [style.width.%]="round(n.memoryPercentage)"></div></div>
             </div>

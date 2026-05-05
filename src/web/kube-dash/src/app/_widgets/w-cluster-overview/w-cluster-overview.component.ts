@@ -4,12 +4,13 @@ import { KubernetesApiService, Cluster } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
 import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
 import { ProgressBarComponent } from '../../_components/progress-bar/progress-bar.component';
+import { FlashLabelComponent } from '../../_components/flash-label/flash-label.component';
 import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-w-cluster-overview',
   standalone: true,
-  imports: [LoadingSpinnerComponent, ProgressBarComponent, LucideAngularModule],
+  imports: [LoadingSpinnerComponent, ProgressBarComponent, FlashLabelComponent, LucideAngularModule],
   templateUrl: './w-cluster-overview.component.html',
   styleUrls: ['./w-cluster-overview.component.scss'],
 })

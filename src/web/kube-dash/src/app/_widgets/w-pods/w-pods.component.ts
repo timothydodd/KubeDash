@@ -7,6 +7,7 @@ import { SelectComponent } from '@rd-ui';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
 import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
+import { FlashLabelComponent } from '../../_components/flash-label/flash-label.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { Pod } from '../../_models/kubernetes.interfaces';
 import { environment } from '../../../environments/environment';
@@ -39,7 +40,7 @@ const STATUS_FILTERS = [
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent],
+  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent, FlashLabelComponent],
   template: `
     <div class="pods-widget">
       <div class="widget-header">
@@ -50,15 +51,15 @@ const STATUS_FILTERS = [
         <div class="header-stats">
           <span class="stat-item">
             <lucide-icon name="check-circle" class="stat-icon running" />
-            {{ runningCount() }}
+            <app-flash-label [value]="runningCount()" />
           </span>
           <span class="stat-item">
             <lucide-icon name="clock" class="stat-icon pending" />
-            {{ pendingCount() }}
+            <app-flash-label [value]="pendingCount()" />
           </span>
           <span class="stat-item">
             <lucide-icon name="x-circle" class="stat-icon failed" />
-            {{ failedCount() }}
+            <app-flash-label [value]="failedCount()" />
           </span>
         </div>
       </div>
