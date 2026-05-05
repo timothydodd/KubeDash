@@ -149,6 +149,43 @@
     color: var(--on-surface-muted, var(--foreground-secondary));
   }
 
+  .pager {
+    display: flex;
+    justify-content: center;
+    padding: 14px 0 8px;
+    border-top: 1px dashed var(--border-color);
+    margin-top: 6px;
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 14px;
+      background: var(--surface-variant, rgba(255, 255, 255, 0.05));
+      color: var(--on-surface, var(--foreground));
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+
+      lucide-icon { width: 14px; height: 14px; }
+
+      &:hover:not(:disabled) {
+        color: var(--accent-cyan, #8be9fd);
+        border-color: currentColor;
+      }
+      &:disabled { opacity: 0.6; cursor: wait; }
+    }
+
+    .pager-msg {
+      font-size: 0.75rem;
+      color: var(--on-surface-muted, var(--foreground-secondary));
+      font-style: italic;
+    }
+  }
+
   .date-divider {
     display: flex;
     align-items: center;

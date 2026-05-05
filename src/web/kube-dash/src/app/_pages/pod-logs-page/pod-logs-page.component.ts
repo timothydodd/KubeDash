@@ -140,6 +140,22 @@ interface PersistedFilters {
               </div>
             }
           }
+
+          @if (selectedPod() && logs().length > 0) {
+            <div class="pager">
+              @if (noMoreOlder()) {
+                <span class="pager-msg">No older logs available</span>
+              } @else {
+                <button class="btn" (click)="loadOlder()" [disabled]="loadingMore()">
+                  @if (loadingMore()) {
+                    <lucide-icon name="loader-2" /> Loading...
+                  } @else {
+                    <lucide-icon name="rotate-ccw" /> Load older
+                  }
+                </button>
+              }
+            </div>
+          }
         }
       </div>
     </div>
@@ -160,6 +176,13 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   selectedLevels = signal<Set<LogLevel>>(new Set(LOG_LEVELS));
   selectedRange = signal<TimeRange>(TIME_RANGES[2]); // default Last 1 hour
+  tailLineCount = signal<number>(0); // 0 = use sinceSeconds; >0 = paginated tailLines mode
+  loadingMore = signal<boolean>(false);
+  noMoreOlder = signal<boolean>(false);
+
+  private readonly INITIAL_TAIL = 2000;
+  private readonly LOAD_MORE_CHUNK = 2000;
+  private readonly MAX_TAIL = 50000;
 
   readonly levels = LOG_LEVELS;
   readonly timeRanges = TIME_RANGES.map((r) => ({ label: r.label, value: r }));
@@ -213,6 +236,9 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   onRangeSelect(range: TimeRange | null) {
     if (range) {
       this.selectedRange.set(range);
+      // Changing the range resets pagination back to time-range mode.
+      this.tailLineCount.set(0);
+      this.noMoreOlder.set(false);
       const pod = this.selectedPod();
       if (pod) this.fetchTail(pod);
     }
@@ -370,6 +396,8 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   onPodChange() {
     this.unsubscribeCurrent();
     this.logs.set([]);
+    this.tailLineCount.set(0);
+    this.noMoreOlder.set(false);
     const pod = this.selectedPod();
     if (!pod) return;
     this.error.set(null);
@@ -379,21 +407,56 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  private fetchTail(pod: PodInfo) {
+  loadOlder() {
+    const pod = this.selectedPod();
+    if (!pod || this.loadingMore() || this.noMoreOlder()) return;
+
+    // First click: switch from time-range mode to tail-line mode based on current size.
+    let next = this.tailLineCount();
+    if (next === 0) {
+      next = Math.max(this.logs().length + this.LOAD_MORE_CHUNK, this.INITIAL_TAIL);
+    } else {
+      next = next + this.LOAD_MORE_CHUNK;
+    }
+    if (next > this.MAX_TAIL) next = this.MAX_TAIL;
+    this.tailLineCount.set(next);
+    this.fetchTail(pod, /* loadOlder */ true);
+  }
+
+  private fetchTail(pod: PodInfo, loadOlder = false) {
+    const params = new URLSearchParams({ namespace: pod.namespace, pod: pod.name });
+    const tail = this.tailLineCount();
     const range = this.selectedRange();
-    const params = new URLSearchParams({
-      namespace: pod.namespace,
-      pod: pod.name,
-    });
-    if (range.seconds) params.set('sinceSeconds', String(range.seconds));
-    else params.set('tailLines', '2000');
+
+    if (tail > 0) {
+      params.set('tailLines', String(tail));
+    } else if (range.seconds) {
+      params.set('sinceSeconds', String(range.seconds));
+    } else {
+      params.set('tailLines', String(this.INITIAL_TAIL));
+    }
+
+    const previousLength = this.logs().length;
+    if (loadOlder) this.loadingMore.set(true);
+
     const url = `${environment.apiUrl}/api/log/tail?${params.toString()}`;
     this.http.get<{ lines: string[] }>(url).subscribe({
       next: (resp) => {
         const seed: Log[] = resp.lines.map((raw) => this.lineToLog(pod, raw));
         this.logs.set(seed);
+        if (loadOlder) {
+          this.loadingMore.set(false);
+          // If we asked for more lines but got the same count back, kubelet has no older logs.
+          if (seed.length <= previousLength) this.noMoreOlder.set(true);
+          if (tail >= this.MAX_TAIL) this.noMoreOlder.set(true);
+        } else {
+          this.noMoreOlder.set(false);
+        }
       },
-      error: (err) => this.error.set(err?.error?.error || 'Failed to fetch logs'),
+      error: (err) => {
+        this.loadingMore.set(false);
+        this.error.set(err?.error?.error || 'Failed to fetch logs');
+      },
     });
   }
 
