@@ -1,0 +1,58 @@
+:host {
+  position: fixed;
+  right: 14px;
+  bottom: 12px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.status {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  background: var(--surface, #343746);
+  border: 1px solid var(--border-color, #44475a);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: pre-line;
+  user-select: none;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  lucide-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  &.online {
+    color: var(--success, #50fa7b);
+    .dot {
+      background: var(--success, #50fa7b);
+      box-shadow: 0 0 0 0 rgba(80, 250, 123, 0.7);
+      animation: pulse 1.8s ease-out infinite;
+    }
+  }
+
+  &.offline {
+    color: var(--danger, #ff5555);
+    .dot {
+      background: var(--danger, #ff5555);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(80, 250, 123, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(80, 250, 123, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(80, 250, 123, 0); }
+}

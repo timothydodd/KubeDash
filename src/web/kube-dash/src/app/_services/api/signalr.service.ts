@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth-service';
 
@@ -16,6 +16,7 @@ export class SignalRService {
   public nodeUpdate = new Subject<any>();
   public podUpdate = new Subject<any>();
   public eventUpdate = new Subject<any>();
+  public connected$ = new BehaviorSubject<boolean>(false);
 
   public startConnection() {
     if (this.hubConnection) {
@@ -44,12 +45,19 @@ export class SignalRService {
         console.log('Kubernetes hub connection started');
         this.addKubernetesListeners();
         this.subscribeToCluster('default');
+        this.connected$.next(true);
       })
-      .catch((err) => console.log('Error while starting connection: ' + err));
+      .catch((err) => {
+        console.log('Error while starting connection: ' + err);
+        this.connected$.next(false);
+      });
 
+    this.hubConnection.onreconnecting(() => this.connected$.next(false));
+    this.hubConnection.onclose(() => this.connected$.next(false));
     this.hubConnection.onreconnected(() => {
       console.log('Kubernetes hub reconnected');
       this.subscribeToCluster('default');
+      this.connected$.next(true);
     });
   }
 
@@ -99,5 +107,6 @@ export class SignalRService {
   public stopConnection() {
     this.hubConnection?.stop();
     this.hubConnection = undefined;
+    this.connected$.next(false);
   }
 }

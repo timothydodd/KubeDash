@@ -5,6 +5,7 @@ import { SignalRService } from './_services/api/signalr.service';
 import { DynamicBackgroundDirective } from './_directives/dynamic-background';
 import { EffectBackgroundDirective } from './_directives/effect-background';
 import { UserMenuComponent } from './_components/user-menu/user-menu.component';
+import { ConnectionStatusComponent } from './_components/connection-status/connection-status.component';
 import { AuthService } from './_services/auth-service';
 
 @Component({
@@ -18,6 +19,7 @@ import { AuthService } from './_services/auth-service';
     DynamicBackgroundDirective,
     EffectBackgroundDirective,
     UserMenuComponent,
+    ConnectionStatusComponent,
   ],
   template: `
     <div class="app-container" appDynamicBackground>
@@ -44,6 +46,7 @@ import { AuthService } from './_services/auth-service';
           <router-outlet />
         </main>
       </div>
+      <app-connection-status />
     </div>
   `,
   styleUrl: './app.component.scss',

@@ -107,10 +107,6 @@ interface PersistedFilters {
         <button class="btn" (click)="reload()" [disabled]="!selectedPod()" title="Reload tail">
           <lucide-icon name="refresh-cw" /> Reload
         </button>
-        <span class="status" [class.connected]="connected()">
-          <lucide-icon [name]="connected() ? 'activity' : 'alert-circle'" />
-          {{ connected() ? 'Live' : 'Disconnected' }}
-        </span>
       </div>
 
       @if (error()) {
@@ -172,7 +168,6 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
   selectedPod = signal<PodInfo | null>(null);
   search = signal<string>('');
   logs = signal<Log[]>([]);
-  connected = signal(false);
   error = signal<string | null>(null);
   selectedLevels = signal<Set<LogLevel>>(new Set(LOG_LEVELS));
   selectedRange = signal<TimeRange>(TIME_RANGES[2]); // default Last 1 hour
@@ -293,9 +288,6 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
       this.signalr.startConnection(token).catch(() => { /* surfaced via connected$ */ });
     }
     this.subs = this.signalr.logsReceived.subscribe((batch) => this.appendLogs(batch));
-    this.subs.add(
-      this.signalr.connected$.subscribe((c) => this.connected.set(c)),
-    );
   }
 
   ngOnDestroy() {
