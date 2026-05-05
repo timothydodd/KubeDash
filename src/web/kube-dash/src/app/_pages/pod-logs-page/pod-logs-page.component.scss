@@ -222,13 +222,13 @@
     padding: 4px 14px;
     margin: 0 8px 2px;
     border-radius: 4px;
-    background: rgba(40, 42, 54, 0.35);
+    background: var(--surface, #343746);
     border-left: 2px solid transparent;
     white-space: pre-wrap;
     word-break: break-word;
     transition: background-color 0.15s ease;
 
-    &:hover { background: rgba(40, 42, 54, 0.6); }
+    &:hover { background: var(--surface-variant, #424450); }
 
     &[data-level="error"]   { border-left-color: rgba(255, 85, 85, 0.5); }
     &[data-level="warning"] { border-left-color: rgba(241, 250, 140, 0.5); }
