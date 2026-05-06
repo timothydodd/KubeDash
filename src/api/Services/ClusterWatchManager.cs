@@ -136,7 +136,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
             await _kubernetesService.WatchMetrics(
                 onEvent: async (eventType, node) =>
                 {
-                    _logger.LogInformation("Node event: {EventType} - {Name}", eventType, node.Metadata.Name);
+                    _logger.LogDebug("Node event: {EventType} - {Name}", eventType, node.Metadata.Name);
                     await _dashboardHubService.SendNodeUpdate(Constants.DefaultCluster.Id, new { EventType = eventType, Node = node });
                 },
                 onError: ex => _logger.LogWarning(ex, "Node watch error"),
@@ -158,7 +158,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
             response.Watch<V1Pod, V1PodList>(
                 onEvent: async (eventType, pod) =>
                 {
-                    _logger.LogInformation("Pod event: {EventType} - {Name} in {Ns}",
+                    _logger.LogDebug("Pod event: {EventType} - {Name} in {Ns}",
                         eventType, pod.Metadata.Name, pod.Metadata.NamespaceProperty);
                     await _dashboardHubService.SendPodUpdate(Constants.DefaultCluster.Id, pod.Metadata.NamespaceProperty,
                         new { EventType = eventType, Pod = pod });
@@ -183,7 +183,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
             response.Watch<Corev1Event, Corev1EventList>(
                 onEvent: async (eventType, k8sEvent) =>
                 {
-                    _logger.LogInformation("K8s event: {EventType} - {Message}", eventType, k8sEvent.Message);
+                    _logger.LogDebug("K8s event: {EventType} - {Message}", eventType, k8sEvent.Message);
                     await _dashboardHubService.SendEventUpdate(Constants.DefaultCluster.Id,
                         new { EventType = eventType, Event = k8sEvent });
                 },
