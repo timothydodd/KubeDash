@@ -9,7 +9,7 @@ export class EffectBackgroundDirective {
   renderer = inject(Renderer2);
 
   constructor() {
-    // Add a subtle glass effect for KubeDash
+    // Add a subtle glass effect for Portside
     this.renderer.setStyle(this.el.nativeElement, 'backdrop-filter', 'blur(10px)');
     this.renderer.setStyle(this.el.nativeElement, 'background', 'rgba(255, 255, 255, 0.1)');
     this.renderer.setStyle(this.el.nativeElement, 'border-radius', '12px');

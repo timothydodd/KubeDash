@@ -1,4 +1,4 @@
-namespace KubeDashApi.Models;
+namespace PortsideApi.Models;
 
 public class Cluster
 {

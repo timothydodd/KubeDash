@@ -1,4 +1,4 @@
-# KubeDash
+# Portside
 
 Lightweight Kubernetes dashboard. ASP.NET Core 10 backend, Angular 21 frontend with SignalR for live updates.
 
@@ -15,7 +15,7 @@ Lightweight Kubernetes dashboard. ASP.NET Core 10 backend, Angular 21 frontend w
 This repo uses git submodules:
 
 ```bash
-git clone --recurse-submodules https://github.com/timothydodd/KubeDash
+git clone --recurse-submodules https://github.com/timothydodd/portside
 # or, if already cloned:
 git submodule update --init --recursive
 ```
@@ -28,7 +28,7 @@ cd src/api
 dotnet run
 
 # Frontend (separate terminal)
-cd src/web/kube-dash
+cd src/web/portside
 npm install
 npm start
 ```
@@ -40,16 +40,16 @@ Default seeded user: **admin / admin** — change via the user menu after first 
 ### Run with Docker
 
 ```bash
-docker build -t kubedash:dev .
+docker build -t portside:dev .
 docker run -p 8080:8080 \
   -v $HOME/.kube:/home/app/.kube:ro \
-  -v kubedash-data:/app/data \
-  kubedash:dev
+  -v portside-data:/app/data \
+  portside:dev
 ```
 
 ### Deploy to k3s
 
-A sample manifest is in [`deploy/k3s/kubedash.yaml`](deploy/k3s/kubedash.yaml). It includes:
+A sample manifest is in [`deploy/k3s/portside.yaml`](deploy/k3s/portside.yaml). It includes:
 
 - ServiceAccount + ClusterRole with the read-only permissions the dashboard needs.
 - A Secret for the JWT signing key (replace before applying).
@@ -61,7 +61,7 @@ A sample manifest is in [`deploy/k3s/kubedash.yaml`](deploy/k3s/kubedash.yaml). 
 # Generate a real JWT secret first, then replace the placeholder in the manifest.
 openssl rand -base64 48
 
-kubectl apply -f deploy/k3s/kubedash.yaml
+kubectl apply -f deploy/k3s/portside.yaml
 ```
 
 ## Architecture
@@ -70,9 +70,9 @@ kubectl apply -f deploy/k3s/kubedash.yaml
 src/
   api/                  ASP.NET Core 10 API + SignalR hubs
   RoboDodd.OrmLite/     submodule - ORM
-  web/kube-dash/
+  web/portside/
     src/rd-ui/          submodule - shared Angular UI library
-    src/app/            kube-dash app
+    src/app/            portside app
 deploy/k3s/             sample manifest
 .github/workflows/ci.yml
 Dockerfile

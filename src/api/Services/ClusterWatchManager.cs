@@ -1,10 +1,10 @@
 using k8s;
 using k8s.Models;
-using KubeDashApi.Common;
-using KubeDashApi.Hubs;
+using PortsideApi.Common;
+using PortsideApi.Hubs;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 /// <summary>
 /// Reference-counted owner of the cluster-wide K8s watch streams (nodes, pods, events) and

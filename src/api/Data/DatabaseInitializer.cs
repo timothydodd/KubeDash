@@ -1,8 +1,8 @@
-using KubeDashApi.Data.Models;
-using KubeDashApi.Services;
+using PortsideApi.Data.Models;
+using PortsideApi.Services;
 using RoboDodd.OrmLite;
 
-namespace KubeDashApi.Data;
+namespace PortsideApi.Data;
 
 public class DatabaseInitializer
 {

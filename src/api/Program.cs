@@ -1,10 +1,10 @@
-using KubeDashApi.Common.HealthChecks;
-using KubeDashApi.Data;
-using KubeDashApi.Hubs;
-using KubeDashApi.Middleware;
+using PortsideApi.Common.HealthChecks;
+using PortsideApi.Data;
+using PortsideApi.Hubs;
+using PortsideApi.Middleware;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
-namespace KubeDashApi;
+namespace PortsideApi;
 
 public class Program
 {

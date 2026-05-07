@@ -32,29 +32,29 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: |
-            src/web/kube-dash/package-lock.json
-            src/web/kube-dash/src/rd-ui/package-lock.json
+            src/web/portside/package-lock.json
+            src/web/portside/src/rd-ui/package-lock.json
 
       - name: Restore .NET
-        run: dotnet restore src/api/KubeDashApi.csproj
+        run: dotnet restore src/api/PortsideApi.csproj
 
       - name: Build .NET
-        run: dotnet build src/api/KubeDashApi.csproj -c Release --no-restore
+        run: dotnet build src/api/PortsideApi.csproj -c Release --no-restore
 
       - name: Install rd-ui deps
-        working-directory: src/web/kube-dash/src/rd-ui
+        working-directory: src/web/portside/src/rd-ui
         run: npm ci
 
       - name: Install web deps
-        working-directory: src/web/kube-dash
+        working-directory: src/web/portside
         run: npm ci
 
       - name: Build rd-ui library
-        working-directory: src/web/kube-dash
+        working-directory: src/web/portside
         run: npm run lib:build
 
       - name: Build web (production)
-        working-directory: src/web/kube-dash
+        working-directory: src/web/portside
         run: npm run prod
 
   docker:
@@ -84,7 +84,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/kubedash:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/kubedash:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/portside:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/portside:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

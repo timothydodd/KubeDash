@@ -20,7 +20,7 @@ interface LogCounts {
 type SortKey = 'name' | 'namespace' | 'status' | 'cpu' | 'memory' | 'age' | 'errors';
 type SortDir = 'asc' | 'desc';
 
-const PODS_FILTER_KEY = 'kubedash:pods-widget-filters';
+const PODS_FILTER_KEY = 'portside:pods-widget-filters';
 interface PersistedPodsFilters {
   search?: string;
   namespace?: string;

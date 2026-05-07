@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace KubeDashApi.Common.HealthChecks;
+namespace PortsideApi.Common.HealthChecks;
 
 public static class HealthCheckResponseWriter
 {

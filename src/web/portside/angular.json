@@ -26,7 +26,7 @@
         }
       }
     },
-    "kube-dash": {
+    "portside": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -40,7 +40,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/kube-dash",
+            "outputPath": "dist/portside",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -99,10 +99,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "kube-dash:build:production"
+              "buildTarget": "portside:build:production"
             },
             "development": {
-              "buildTarget": "kube-dash:build:development"
+              "buildTarget": "portside:build:development"
             }
           },
           "defaultConfiguration": "development"

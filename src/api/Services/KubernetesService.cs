@@ -1,11 +1,11 @@
-﻿using KubeDashApi.Services.Interfaces;
-using KubeDashApi.Models;
-using KubeDashApi.Common;
+﻿using PortsideApi.Services.Interfaces;
+using PortsideApi.Models;
+using PortsideApi.Common;
 using k8s;
 using k8s.Models;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 public class KubernetesService : IKubernetesService
 {

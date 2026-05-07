@@ -1,10 +1,10 @@
 using k8s;
-using KubeDashApi.Common;
+using PortsideApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace KubeDashApi.Controllers;
+namespace PortsideApi.Controllers;
 
 [Authorize]
 [ApiController]

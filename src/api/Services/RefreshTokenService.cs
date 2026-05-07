@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
-using KubeDashApi.Data.Models;
+using PortsideApi.Data.Models;
 using RoboDodd.OrmLite;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 public class RefreshTokenService
 {

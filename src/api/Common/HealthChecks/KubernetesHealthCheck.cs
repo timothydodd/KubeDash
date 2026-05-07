@@ -1,7 +1,7 @@
 using k8s;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace KubeDashApi.Common.HealthChecks;
+namespace PortsideApi.Common.HealthChecks;
 
 public sealed class KubernetesHealthCheck : IHealthCheck
 {

@@ -1,7 +1,7 @@
-using KubeDashApi.Data.Models;
+using PortsideApi.Data.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 public class PasswordService
 {

@@ -1,11 +1,11 @@
-﻿using KubeDashApi.Services;
-using KubeDashApi.Models;
+﻿using PortsideApi.Services;
+using PortsideApi.Models;
 using k8s;
 using k8s.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace KubeDashApi.Controllers;
+namespace PortsideApi.Controllers;
 
 [ApiController]
 [Route("api/kubernetes")]

@@ -1,12 +1,12 @@
 using System.IO.Compression;
 using System.Text;
 using k8s;
-using KubeDashApi.Common;
-using KubeDashApi.Common.HealthChecks;
-using KubeDashApi.Data;
-using KubeDashApi.Hubs;
-using KubeDashApi.Services;
-using KubeDashApi.Services.Interfaces;
+using PortsideApi.Common;
+using PortsideApi.Common.HealthChecks;
+using PortsideApi.Data;
+using PortsideApi.Hubs;
+using PortsideApi.Services;
+using PortsideApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -93,7 +93,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration config)
     {
         var connectionString = config.GetConnectionString("DefaultConnection")
-            ?? "Data Source=kubedash.db";
+            ?? "Data Source=portside.db";
 
         var dbFactory = new DbConnectionFactory(connectionString, DatabaseProvider.SQLite);
         services.AddSingleton(dbFactory);

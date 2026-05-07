@@ -1,8 +1,8 @@
 using k8s;
 using k8s.Models;
-using KubeDashApi.Models;
+using PortsideApi.Models;
 
-namespace KubeDashApi.Services.Interfaces;
+namespace PortsideApi.Services.Interfaces;
 
 public interface IKubernetesService
 {

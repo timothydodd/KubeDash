@@ -27,7 +27,7 @@ import { AuthService } from './_services/auth-service';
     <div class="app-container" appDynamicBackground>
       <div class="content-wrapper" appEffectBackground>
         <header class="app-header">
-          <h1>KubeDash</h1>
+          <h1>Portside</h1>
           <span class="subtitle">Kubernetes Dashboard</span>
           <nav class="app-nav">
             <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
@@ -54,7 +54,7 @@ import { AuthService } from './_services/auth-service';
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
-  title = 'KubeDash';
+  title = 'Portside';
   auth = inject(AuthService);
   private signalRService = inject(SignalRService);
 

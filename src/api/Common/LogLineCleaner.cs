@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace KubeDashApi.Common;
+namespace PortsideApi.Common;
 
 /// <summary>
 /// Strips redundant prefixes from log lines so the viewer doesn't show information

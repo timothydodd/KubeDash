@@ -1,10 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using KubeDashApi.Data.Models;
+using PortsideApi.Data.Models;
 using Microsoft.IdentityModel.Tokens;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 public class AuthService
 {

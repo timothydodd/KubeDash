@@ -43,7 +43,7 @@ const TIME_RANGES: TimeRange[] = [
   { label: 'All available', seconds: null },
 ];
 
-const STORAGE_KEY = 'kubedash:pod-logs-filters';
+const STORAGE_KEY = 'portside:pod-logs-filters';
 interface PersistedFilters {
   search?: string;
   levels?: LogLevel[];

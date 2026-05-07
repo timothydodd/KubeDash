@@ -1,10 +1,10 @@
-# KubeDash - sample k3s manifest.
+# Portside - sample k3s manifest.
 #
 # Replace IMAGE / JWT_SECRET / HOST below before applying. Generate a JWT secret with:
 #   openssl rand -base64 48
 #
 # Apply with:
-#   kubectl apply -f deploy/k3s/kubedash.yaml
+#   kubectl apply -f deploy/k3s/portside.yaml
 #
 # RBAC grants read access to the cluster resources the dashboard needs:
 # pods/nodes/events (list+watch), pod logs, namespaces, deployments, services,
@@ -13,18 +13,18 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kubedash
+  name: portside
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kubedash
-  namespace: kubedash
+  name: portside
+  namespace: portside
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kubedash-reader
+  name: portside-reader
 rules:
   - apiGroups: [""]
     resources:
@@ -53,21 +53,21 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kubedash-reader
+  name: portside-reader
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubedash-reader
+  name: portside-reader
 subjects:
   - kind: ServiceAccount
-    name: kubedash
-    namespace: kubedash
+    name: portside
+    namespace: portside
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: kubedash-jwt
-  namespace: kubedash
+  name: portside-jwt
+  namespace: portside
 type: Opaque
 stringData:
   # REPLACE with `openssl rand -base64 48`. Must be at least 32 chars.
@@ -76,8 +76,8 @@ stringData:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: kubedash-data
-  namespace: kubedash
+  name: portside-data
+  namespace: portside
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
@@ -89,26 +89,26 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kubedash
-  namespace: kubedash
+  name: portside
+  namespace: portside
   labels:
-    app.kubernetes.io/name: kubedash
+    app.kubernetes.io/name: portside
 spec:
   replicas: 1
   strategy:
     type: Recreate # SQLite on RWO volume - single writer
   selector:
     matchLabels:
-      app.kubernetes.io/name: kubedash
+      app.kubernetes.io/name: portside
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: kubedash
+        app.kubernetes.io/name: portside
     spec:
-      serviceAccountName: kubedash
+      serviceAccountName: portside
       containers:
-        - name: kubedash
-          image: ghcr.io/timothydodd/kubedash:latest
+        - name: portside
+          image: ghcr.io/timothydodd/portside:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -119,11 +119,11 @@ spec:
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
             - name: ConnectionStrings__DefaultConnection
-              value: "Data Source=/app/data/kubedash.db"
+              value: "Data Source=/app/data/portside.db"
             - name: JwtSettings__Issuer
-              value: "kubedash"
+              value: "portside"
             - name: JwtSettings__Audience
-              value: "kubedash"
+              value: "portside"
             - name: JwtSettings__ExpiryMinutes
               value: "60"
             - name: JwtSettings__RefreshTokenExpiryDays
@@ -131,11 +131,11 @@ spec:
             - name: JwtSettings__Secret
               valueFrom:
                 secretKeyRef:
-                  name: kubedash-jwt
+                  name: portside-jwt
                   key: secret
             # If exposing the SPA from a different origin, set CORS:
             # - name: AllowedOrigins
-            #   value: "https://kubedash.example.com"
+            #   value: "https://portside.example.com"
           volumeMounts:
             - name: data
               mountPath: /app/data
@@ -161,19 +161,19 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: kubedash-data
+            claimName: portside-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: kubedash
-  namespace: kubedash
+  name: portside
+  namespace: portside
   labels:
-    app.kubernetes.io/name: kubedash
+    app.kubernetes.io/name: portside
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: kubedash
+    app.kubernetes.io/name: portside
   ports:
     - name: http
       port: 80
@@ -183,25 +183,25 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kubedash
-  namespace: kubedash
+  name: portside
+  namespace: portside
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik
   rules:
-    - host: kubedash.example.com # REPLACE
+    - host: portside.example.com # REPLACE
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: kubedash
+                name: portside
                 port:
                   name: http
   # Uncomment if you have cert-manager wiring TLS:
   # tls:
-  #   - hosts: ["kubedash.example.com"]
-  #     secretName: kubedash-tls
+  #   - hosts: ["portside.example.com"]
+  #     secretName: portside-tls

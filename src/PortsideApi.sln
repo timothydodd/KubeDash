@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeDashApi", "api\KubeDashApi.csproj", "{A0DCE387-5ACA-4639-B405-304003109DC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortsideApi", "api\PortsideApi.csproj", "{A0DCE387-5ACA-4639-B405-304003109DC6}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "kube-dash", "web\kube-dash\kube-dash.esproj", "{C8A84CCB-9FE2-42D9-8D03-65A5A7A5B1DC}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "portside", "web\portside\portside.esproj", "{C8A84CCB-9FE2-42D9-8D03-65A5A7A5B1DC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoboDodd.OrmLite", "RoboDodd.OrmLite\src\RoboDodd.OrmLite\RoboDodd.OrmLite.csproj", "{B9F1C2D3-E4A5-4B6C-8D7E-1F2A3B4C5D6E}"
 EndProject

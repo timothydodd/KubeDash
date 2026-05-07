@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace KubeDashApi.Common;
+namespace PortsideApi.Common;
 
 public class Constants
 {

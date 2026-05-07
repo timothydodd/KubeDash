@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using RoboDodd.OrmLite;
 
-namespace KubeDashApi.Common.HealthChecks;
+namespace PortsideApi.Common.HealthChecks;
 
 public sealed class SqliteHealthCheck : IHealthCheck
 {

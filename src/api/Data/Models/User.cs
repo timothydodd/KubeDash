@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using RoboDodd.OrmLite;
 
-namespace KubeDashApi.Data.Models;
+namespace PortsideApi.Data.Models;
 
 public class User
 {

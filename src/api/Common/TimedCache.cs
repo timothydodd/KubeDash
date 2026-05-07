@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 
-namespace KubeDashApi.Common;
+namespace PortsideApi.Common;
 
 public class TimedCache
 {

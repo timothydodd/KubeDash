@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KubeDash is a full-stack Kubernetes management dashboard application with a two-tier architecture:
+Portside is a full-stack Kubernetes management dashboard application with a two-tier architecture:
 - **Frontend**: Angular 20 SPA with Signal-based reactivity
 - **Backend**: ASP.NET Core 9 Web API (.NET 9.0) with direct Kubernetes API integration
 
@@ -20,7 +20,7 @@ The application provides real-time monitoring and management of Kubernetes clust
 
 ### Frontend (Angular)
 ```bash
-cd src/web/kube-dash
+cd src/web/portside
 npm start              # Development server (http://localhost:4200)
 npm run build          # Development build
 npm run prod           # Production build
@@ -63,14 +63,14 @@ dotnet build                       # Uses bin-wsl/ and obj-wsl/ directories
 ### Docker
 ```bash
 # From project root
-docker build -f src/api/Dockerfile . -t kubedash
-docker run -p 8080:8080 kubedash
+docker build -f src/api/Dockerfile . -t portside
+docker run -p 8080:8080 portside
 ```
 
 ### Full Stack Development
 The project uses SPA proxy integration - run both:
 1. `dotnet run` from `src/api/` (backend on port 5211/7132)
-2. `npm start` from `src/web/kube-dash/` (frontend on port 4200)
+2. `npm start` from `src/web/portside/` (frontend on port 4200)
 
 ## Architecture Patterns
 
@@ -104,7 +104,7 @@ src/
 │   ├── Models/                    # Data models and DTOs
 │   ├── Hub/                       # SignalR hubs for real-time updates
 │   └── Common/                    # Shared utilities and extensions
-└── web/kube-dash/                 # Angular 20 application
+└── web/portside/                 # Angular 20 application
     └── src/app/
         ├── _components/           # Reusable UI components
         ├── _services/             # Data services and state management
@@ -175,13 +175,13 @@ Direct integration with Kubernetes API:
 
 ### Environment Variables
 - `replace_vars.sh` script replaces `${API_URL}` in TypeScript files during build
-- Environment-specific configurations in `src/web/kube-dash/src/environments/`
+- Environment-specific configurations in `src/web/portside/src/environments/`
 
 ## Widget Development
 
 ### Widget Structure
 Widgets are self-contained components:
-- Located in `src/web/kube-dash/src/app/_widgets/`
+- Located in `src/web/portside/src/app/_widgets/`
 - Include component, template, styles, and modal dialogs
 - Use Signal-based state management
 - Responsive design with automatic layout adjustment
@@ -227,12 +227,12 @@ Widgets are self-contained components:
 ### Global Styles Architecture
 Follow the same utility-first approach as HomeDash:
 
-**Mixins** (`src/web/kube-dash/src/styles/_mixins.scss`):
+**Mixins** (`src/web/portside/src/styles/_mixins.scss`):
 - Use same glass morphism mixins
 - Kubernetes-specific color variables
 - Resource status indicators
 
-**Utility Classes** (`src/web/kube-dash/src/styles/_utilities.scss`):
+**Utility Classes** (`src/web/portside/src/styles/_utilities.scss`):
 - Same layout and effect utilities
 - K8s status colors (Running, Pending, Failed)
 - Resource type badges
@@ -254,12 +254,12 @@ Follow the same utility-first approach as HomeDash:
 - Kubernetes API calls include built-in caching - consider TTL when designing
 - SignalR automatically handles reconnection - don't implement manual retry logic
 - K8s API calls should handle rate limiting and retries
-- SCSS variables and mixins located in `src/web/kube-dash/src/styles/`
+- SCSS variables and mixins located in `src/web/portside/src/styles/`
 - **Always check global styles first** before writing component-specific CSS
 
 ## Lucide Icons
 
-Configure icons in `src/web/kube-dash/src/app/app.config.ts`:
+Configure icons in `src/web/portside/src/app/app.config.ts`:
 
 **Kubernetes-specific icons to include:**
 - `Server`, `HardDrive`, `Cpu`, `Database` (infrastructure)

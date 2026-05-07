@@ -8,13 +8,13 @@
     <UserSecretsId>7940a0e8-c67b-468f-9855-e5b5e87abb6d</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <LangVersion>13</LangVersion>
-    <SpaRoot>..\web\kube-dash</SpaRoot>
+    <SpaRoot>..\web\portside</SpaRoot>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>http://localhost:4200</SpaProxyServerUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\web\kube-dash\kube-dash.esproj">
+    <ProjectReference Include="..\web\portside\portside.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\RoboDodd.OrmLite\src\RoboDodd.OrmLite\RoboDodd.OrmLite.csproj" />

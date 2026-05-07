@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using k8s;
 using Microsoft.AspNetCore.SignalR;
-using KubeDashApi.Common;
-using KubeDashApi.Hubs;
+using PortsideApi.Common;
+using PortsideApi.Hubs;
 
-namespace KubeDashApi.Services;
+namespace PortsideApi.Services;
 
 public sealed record PodLogLine(
     long Id,

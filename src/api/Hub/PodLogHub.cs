@@ -1,8 +1,8 @@
-using KubeDashApi.Services;
+using PortsideApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace KubeDashApi.Hubs;
+namespace PortsideApi.Hubs;
 
 [Authorize]
 public class PodLogHub : Hub
