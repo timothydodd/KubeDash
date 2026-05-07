@@ -13,7 +13,7 @@ import { Cluster, KubernetesApiService, NodeStats } from '../../_services/kubern
   imports: [FormsModule, ProgressBarComponent, LucideAngularModule, FlashLabelComponent, LoadingSpinnerComponent],
   template: `
     <div class="widget-container">
-      @if (isLoading()) {
+      @if (isLoading() && nodes().length === 0) {
         <div class="loading-state">
           <app-loading-spinner />
           <p>Loading cluster metrics...</p>
@@ -96,7 +96,6 @@ export class WKubernetesComponent implements OnInit, OnDestroy {
   }
 
   private loadClusterMetrics() {
-    this.isLoading.set(true);
     this.error.set(null);
 
     this.api
@@ -105,7 +104,7 @@ export class WKubernetesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.stats.set(data);
-          this.nodes.set(data?.nodes.map((n) => new NodeStatSignal(n)) || []);
+          this.mergeNodes(data?.nodes ?? []);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -115,14 +114,28 @@ export class WKubernetesComponent implements OnInit, OnDestroy {
       });
   }
 
+  private mergeNodes(incoming: NodeStats[]) {
+    const existing = new Map(this.nodes().map((n) => [n.name, n]));
+    const next: NodeStatSignal[] = [];
+    for (const nodeData of incoming) {
+      const name = nodeData.name ?? '';
+      const found = existing.get(name);
+      if (found) {
+        found.memoryUsage.set(nodeData.memoryUsage || 0);
+        found.memoryPercentage.set(nodeData.memoryPercentage || 0);
+        found.cpuPercentage.set(nodeData.cpuPercentage || 0);
+        next.push(found);
+      } else {
+        next.push(new NodeStatSignal(nodeData));
+      }
+    }
+    this.nodes.set(next);
+  }
+
   private setupSignalRSubscriptions() {
-    // Listen for cluster updates which contain node data
     this.signalR.clusterUpdate.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       if (data && data.nodes) {
-        console.log('Nodes widget received cluster update:', data);
-        // Update node data from cluster metrics
-        const updatedNodes = data.nodes.map((nodeData: any) => new NodeStatSignal(nodeData));
-        this.nodes.set(updatedNodes);
+        this.mergeNodes(data.nodes);
         this.isLoading.set(false);
       }
     });

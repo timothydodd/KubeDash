@@ -22,7 +22,7 @@
     }
   </div>
 
-  @if (loading()) {
+  @if (loading() && !cluster()) {
     <div class="loading-state">
       <app-loading-spinner />
       <p>Loading cluster metrics...</p>

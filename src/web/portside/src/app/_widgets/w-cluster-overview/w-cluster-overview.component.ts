@@ -49,7 +49,6 @@ export class WClusterOverviewComponent implements OnInit, OnDestroy {
   }
 
   private loadClusterMetrics() {
-    this.loading.set(true);
     this.error.set(null);
 
     this.kubernetesApi
@@ -70,7 +69,6 @@ export class WClusterOverviewComponent implements OnInit, OnDestroy {
   private setupSignalRSubscriptions() {
     this.signalRService.clusterUpdate.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       if (data) {
-        console.log('Cluster overview received SignalR update:', data);
         this.cluster.set(data);
         this.loading.set(false);
       }

@@ -43,7 +43,7 @@ const STATUS_FILTERS = [
   imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent, FlashLabelComponent],
   template: `
     <div class="pods-widget">
-      @if (loading()) {
+      @if (loading() && pods().length === 0) {
         <div class="loading-state">
           <app-loading-spinner />
           <p>Loading pods...</p>
@@ -381,7 +381,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   private loadPods() {
-    this.loading.set(true);
     this.error.set(null);
 
     this.kubernetesApi
@@ -425,12 +424,45 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalRSubscriptions() {
-    // Listen for pod updates via SignalR
     this.signalRService.podUpdate.pipe(takeUntil(this.destroy$)).subscribe((data) => {
-      if (data) {
-        this.loadPods(); // Refresh the pod list
-      }
+      if (!data?.pod) return;
+      this.applyPodEvent(data.eventType, data.pod as Pod);
     });
+  }
+
+  private applyPodEvent(eventType: string, pod: Pod) {
+    const uid = pod.metadata?.uid;
+    if (!uid) return;
+    const current = this.pods();
+    const idx = current.findIndex((p) => p.metadata?.uid === uid);
+
+    switch (eventType) {
+      case 'Added':
+      case 'Modified': {
+        const next = idx >= 0 ? [...current] : [...current, pod];
+        if (idx >= 0) next[idx] = pod;
+        this.pods.set(next);
+        if (pod.status?.phase === 'Running' || pod.status?.phase === 'Failed') {
+          this.loadCounts([pod]);
+        }
+        break;
+      }
+      case 'Deleted': {
+        if (idx >= 0) {
+          const next = current.filter((_, i) => i !== idx);
+          this.pods.set(next);
+          const key = `${pod.metadata.namespace}/${pod.metadata.name}`;
+          if (this.countsMap()[key]) {
+            const map = { ...this.countsMap() };
+            delete map[key];
+            this.countsMap.set(map);
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   retry() {

@@ -137,7 +137,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
                 onEvent: async (eventType, node) =>
                 {
                     _logger.LogDebug("Node event: {EventType} - {Name}", eventType, node.Metadata.Name);
-                    await _dashboardHubService.SendNodeUpdate(Constants.DefaultCluster.Id, new { EventType = eventType, Node = node });
+                    await _dashboardHubService.SendNodeUpdate(Constants.DefaultCluster.Id, new { EventType = eventType.ToString(), Node = node });
                 },
                 onError: ex => _logger.LogWarning(ex, "Node watch error"),
                 onClosed: () => _logger.LogInformation("Node watch closed"));
@@ -161,9 +161,9 @@ public sealed class ClusterWatchManager : IAsyncDisposable
                     _logger.LogDebug("Pod event: {EventType} - {Name} in {Ns}",
                         eventType, pod.Metadata.Name, pod.Metadata.NamespaceProperty);
                     await _dashboardHubService.SendPodUpdate(Constants.DefaultCluster.Id, pod.Metadata.NamespaceProperty,
-                        new { EventType = eventType, Pod = pod });
+                        new { EventType = eventType.ToString(), Pod = pod });
                     await _dashboardHubService.SendClusterPodUpdate(Constants.DefaultCluster.Id,
-                        new { EventType = eventType, Pod = pod });
+                        new { EventType = eventType.ToString(), Pod = pod });
                 },
                 onError: ex => _logger.LogWarning(ex, "Pod watch error"));
         }
@@ -185,7 +185,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
                 {
                     _logger.LogDebug("K8s event: {EventType} - {Message}", eventType, k8sEvent.Message);
                     await _dashboardHubService.SendEventUpdate(Constants.DefaultCluster.Id,
-                        new { EventType = eventType, Event = k8sEvent });
+                        new { EventType = eventType.ToString(), Event = k8sEvent });
                 },
                 onError: ex => _logger.LogWarning(ex, "Event watch error"));
         }

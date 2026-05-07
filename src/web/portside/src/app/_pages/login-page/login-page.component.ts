@@ -11,8 +11,8 @@ import { AuthService } from '../../_services/auth-service';
     <div class="login-container">
       <div class="login-form">
         <div class="text-center mb-4">
-          <img src="logmk.png" alt="LogMk" class="logo mb-3" />
-          <h2 style="color: var(--on-surface); margin: 0;">Login to LogMk</h2>
+          <img src="assets/logo.png" alt="Portside" class="logo mb-3" />
+          <h2 style="color: var(--on-surface); margin: 0;">Login to Portside</h2>
         </div>
         
         <form (ngSubmit)="login()" #loginForm="ngForm">

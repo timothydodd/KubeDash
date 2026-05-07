@@ -27,6 +27,9 @@ import { AuthService } from './_services/auth-service';
     <div class="app-container" appDynamicBackground>
       <div class="content-wrapper" appEffectBackground>
         <header class="app-header">
+          <span class="app-logo" aria-hidden="true">
+            <img src="assets/logo-64.png" alt="" />
+          </span>
           <h1>Portside</h1>
           <span class="subtitle">Kubernetes Dashboard</span>
           <nav class="app-nav">
