@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="Portside" width="180" />
+</p>
+
 # Portside
 
 Lightweight Kubernetes dashboard. ASP.NET Core 10 backend, Angular 21 frontend with SignalR for live updates.

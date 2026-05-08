@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
-import { SelectComponent } from '@rd-ui';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
 import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
@@ -11,6 +10,10 @@ import { FlashLabelComponent } from '../../_components/flash-label/flash-label.c
 import { LucideAngularModule } from 'lucide-angular';
 import { Pod } from '../../_models/kubernetes.interfaces';
 import { environment } from '../../../environments/environment';
+import { UserPreferencesService } from '../../_services/user-preferences.service';
+import { ModalContainerService } from '@rd-ui';
+import { PodDetailsModalComponent } from '../../_components/pod-details-modal/pod-details-modal.component';
+import { ColumnFilterComponent, ColumnFilterItem } from '../../_components/column-filter/column-filter.component';
 
 interface LogCounts {
   error: number;
@@ -23,24 +26,18 @@ type SortDir = 'asc' | 'desc';
 const PODS_FILTER_KEY = 'portside:pods-widget-filters';
 interface PersistedPodsFilters {
   search?: string;
-  namespace?: string;
-  status?: string;
+  excludedNamespaces?: string[];
+  excludedStatuses?: string[];
   sortKey?: SortKey;
   sortDir?: SortDir;
 }
 
-const STATUS_FILTERS = [
-  { label: 'All statuses', value: '' },
-  { label: 'Running', value: 'Running' },
-  { label: 'Pending', value: 'Pending' },
-  { label: 'Failed', value: 'Failed' },
-  { label: 'Succeeded', value: 'Succeeded' },
-];
+const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
 
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, SelectComponent, FlashLabelComponent],
+  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, FlashLabelComponent, ColumnFilterComponent],
   template: `
     <div class="pods-widget">
       @if (loading() && pods().length === 0) {
@@ -67,24 +64,6 @@ const STATUS_FILTERS = [
                      placeholder="Search pods..."
                      aria-label="Search pods" />
             </div>
-            <rd-select
-              [items]="namespaceOptions()"
-              [searchable]="true"
-              searchPlaceholder="Search..."
-              placeholder="All namespaces"
-              [minWidth]="160"
-              size="compact"
-              [ngModel]="selectedNamespace()"
-              (ngModelChange)="selectedNamespace.set($event)"
-            ></rd-select>
-            <rd-select
-              [items]="statusOptions"
-              placeholder="All statuses"
-              [minWidth]="140"
-              size="compact"
-              [ngModel]="selectedStatus()"
-              (ngModelChange)="selectedStatus.set($event)"
-            ></rd-select>
             <span class="result-count">{{ filteredPods().length }} of {{ pods().length }}</span>
           </div>
 
@@ -99,34 +78,53 @@ const STATUS_FILTERS = [
                 <thead>
                   <tr>
                     <th class="sortable" (click)="setSort('name')">
-                      Name {{ sortIndicator('name') }}
+                      <span class="th-label">Name {{ sortIndicator('name') }}</span>
                     </th>
                     <th class="sortable" (click)="setSort('namespace')">
-                      Namespace {{ sortIndicator('namespace') }}
+                      <span class="th-label">Namespace {{ sortIndicator('namespace') }}</span>
+                      <app-column-filter
+                        label="Namespace"
+                        searchPlaceholder="Search namespaces..."
+                        [items]="namespaceItems()"
+                        [selected]="namespaceSelected()"
+                        (selectionChange)="onNamespaceFilter($event)" />
                     </th>
                     <th class="sortable" (click)="setSort('status')">
-                      Status {{ sortIndicator('status') }}
+                      <span class="th-label">Status {{ sortIndicator('status') }}</span>
+                      <app-column-filter
+                        label="Status"
+                        [searchable]="false"
+                        [items]="statusItems()"
+                        [selected]="statusSelected()"
+                        (selectionChange)="onStatusFilter($event)" />
                     </th>
-                    <th>Ready</th>
+                    <th><span class="th-label">Ready</span></th>
                     <th class="sortable" (click)="setSort('cpu')">
-                      CPU {{ sortIndicator('cpu') }}
+                      <span class="th-label">CPU {{ sortIndicator('cpu') }}</span>
                     </th>
                     <th class="sortable" (click)="setSort('memory')">
-                      Memory {{ sortIndicator('memory') }}
+                      <span class="th-label">Memory {{ sortIndicator('memory') }}</span>
                     </th>
-                    <th>Node</th>
+                    <th><span class="th-label">Node</span></th>
                     <th class="sortable" (click)="setSort('age')">
-                      Age {{ sortIndicator('age') }}
+                      <span class="th-label">Age {{ sortIndicator('age') }}</span>
                     </th>
                     <th class="sortable" (click)="setSort('errors')">
-                      24h Errors {{ sortIndicator('errors') }}
+                      <span class="th-label">24h Errors {{ sortIndicator('errors') }}</span>
+                      <app-column-filter
+                        label="Pods to track counts for"
+                        searchPlaceholder="Search pods..."
+                        align="end"
+                        [items]="countsItems()"
+                        [selected]="enabledCountKeys()"
+                        (selectionChange)="onCountsFilter($event)" />
                     </th>
-                    <th>Logs</th>
+                    <th><span class="th-label">Logs</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (pod of filteredPods(); track pod.metadata.namespace + '/' + pod.metadata.name) {
-                    <tr class="pod-row" [class]="getPodStatusClass(pod)">
+                    <tr class="pod-row clickable" [class]="getPodStatusClass(pod)" (click)="openPodDetails(pod)">
                       <td class="pod-name-cell">
                         <span class="pod-name">{{ pod.metadata.name }}</span>
                       </td>
@@ -216,7 +214,8 @@ const STATUS_FILTERS = [
                         <a class="logs-btn"
                            [routerLink]="['/logs']"
                            [queryParams]="{ namespace: pod.metadata.namespace, pod: pod.metadata.name }"
-                           title="View logs">
+                           title="View logs"
+                           (click)="$event.stopPropagation()">
                           <lucide-icon name="server" />
                         </a>
                       </td>
@@ -237,6 +236,8 @@ export class WPodsComponent implements OnInit, OnDestroy {
   private kubernetesApi = inject(KubernetesApiService);
   private signalRService = inject(SignalRService);
   private http = inject(HttpClient);
+  private userPrefs = inject(UserPreferencesService);
+  private modalService = inject(ModalContainerService);
 
   loading = signal(true);
   error = signal<string | null>(null);
@@ -245,29 +246,57 @@ export class WPodsComponent implements OnInit, OnDestroy {
 
   // Filters / sort state
   searchText = signal<string>('');
-  selectedNamespace = signal<string>('');
-  selectedStatus = signal<string>('');
+  excludedNamespaces = signal<Set<string>>(new Set());
+  excludedStatuses = signal<Set<string>>(new Set());
   sortKey = signal<SortKey>('name');
   sortDir = signal<SortDir>('asc');
 
-  readonly statusOptions = STATUS_FILTERS;
+  // Header-filter inputs
+  enabledCountKeys = computed(() => this.userPrefs.podCountsEnabled());
 
-  namespaceOptions = computed(() => {
+  namespaceItems = computed<ColumnFilterItem[]>(() => {
     const set = new Set<string>();
     this.pods().forEach((p) => p.metadata.namespace && set.add(p.metadata.namespace));
-    const opts = Array.from(set).sort().map((ns) => ({ label: ns, value: ns }));
-    return [{ label: 'All namespaces', value: '' }, ...opts];
+    return Array.from(set).sort().map((ns) => ({ label: ns, value: ns }));
+  });
+
+  statusItems = computed<ColumnFilterItem[]>(() => {
+    const set = new Set<string>(KNOWN_STATUSES);
+    this.pods().forEach((p) => p.status?.phase && set.add(p.status.phase));
+    return Array.from(set).sort().map((s) => ({ label: s, value: s }));
+  });
+
+  countsItems = computed<ColumnFilterItem[]>(() =>
+    this.pods()
+      .map((p) => ({
+        label: `${p.metadata.namespace}/${p.metadata.name}`,
+        value: `${p.metadata.namespace}/${p.metadata.name}`,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  );
+
+  // Selected sets shown by the column-filter (items minus excluded)
+  namespaceSelected = computed<Set<string>>(() => {
+    const excluded = this.excludedNamespaces();
+    return new Set(this.namespaceItems().map((i) => i.value).filter((v) => !excluded.has(v)));
+  });
+
+  statusSelected = computed<Set<string>>(() => {
+    const excluded = this.excludedStatuses();
+    return new Set(this.statusItems().map((i) => i.value).filter((v) => !excluded.has(v)));
   });
 
   filteredPods = computed(() => {
     const q = this.searchText().trim().toLowerCase();
-    const ns = this.selectedNamespace();
-    const status = this.selectedStatus();
+    const excludedNs = this.excludedNamespaces();
+    const excludedSt = this.excludedStatuses();
     let list = this.pods().filter((p) => {
-      if (ns && p.metadata.namespace !== ns) return false;
-      if (status && p.status?.phase !== status) return false;
+      const ns = p.metadata.namespace ?? '';
+      const phase = p.status?.phase ?? 'Unknown';
+      if (excludedNs.has(ns)) return false;
+      if (excludedSt.has(phase)) return false;
       if (q) {
-        const hay = `${p.metadata.name ?? ''} ${p.metadata.namespace ?? ''} ${p.spec?.nodeName ?? ''}`.toLowerCase();
+        const hay = `${p.metadata.name ?? ''} ${ns} ${p.spec?.nodeName ?? ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -278,6 +307,20 @@ export class WPodsComponent implements OnInit, OnDestroy {
     list = [...list].sort((a, b) => this.compare(a, b, key) * dir);
     return list;
   });
+
+  onNamespaceFilter(selected: Set<string>) {
+    const all = this.namespaceItems().map((i) => i.value);
+    this.excludedNamespaces.set(new Set(all.filter((v) => !selected.has(v))));
+  }
+
+  onStatusFilter(selected: Set<string>) {
+    const all = this.statusItems().map((i) => i.value);
+    this.excludedStatuses.set(new Set(all.filter((v) => !selected.has(v))));
+  }
+
+  onCountsFilter(selected: Set<string>) {
+    this.userPrefs.setPodCountsEnabled(Array.from(selected));
+  }
 
   setSort(key: SortKey) {
     if (this.sortKey() === key) {
@@ -338,6 +381,24 @@ export class WPodsComponent implements OnInit, OnDestroy {
   constructor() {
     this.restoreFilters();
     effect(() => this.persistFilters());
+
+    // Re-fetch counts whenever the opt-in selection changes (and pods are loaded)
+    effect(() => {
+      const enabled = this.enabledCountKeys();
+      const pods = this.pods();
+      if (pods.length === 0) return;
+      // Drop counts for pods that are no longer opted-in
+      const map = { ...this.countsMap() };
+      let changed = false;
+      for (const key of Object.keys(map)) {
+        if (!enabled.has(key)) {
+          delete map[key];
+          changed = true;
+        }
+      }
+      if (changed) this.countsMap.set(map);
+      if (enabled.size > 0) this.loadCounts(pods);
+    });
   }
 
   private restoreFilters() {
@@ -346,8 +407,8 @@ export class WPodsComponent implements OnInit, OnDestroy {
       if (!raw) return;
       const f = JSON.parse(raw) as PersistedPodsFilters;
       if (typeof f.search === 'string') this.searchText.set(f.search);
-      if (typeof f.namespace === 'string') this.selectedNamespace.set(f.namespace);
-      if (typeof f.status === 'string') this.selectedStatus.set(f.status);
+      if (Array.isArray(f.excludedNamespaces)) this.excludedNamespaces.set(new Set(f.excludedNamespaces));
+      if (Array.isArray(f.excludedStatuses)) this.excludedStatuses.set(new Set(f.excludedStatuses));
       if (f.sortKey) this.sortKey.set(f.sortKey);
       if (f.sortDir) this.sortDir.set(f.sortDir);
     } catch {
@@ -358,8 +419,8 @@ export class WPodsComponent implements OnInit, OnDestroy {
   private persistFilters() {
     const f: PersistedPodsFilters = {
       search: this.searchText(),
-      namespace: this.selectedNamespace(),
-      status: this.selectedStatus(),
+      excludedNamespaces: Array.from(this.excludedNamespaces()),
+      excludedStatuses: Array.from(this.excludedStatuses()),
       sortKey: this.sortKey(),
       sortDir: this.sortDir(),
     };
@@ -371,6 +432,9 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    if (!this.userPrefs.loaded()) {
+      this.userPrefs.load();
+    }
     this.loadPods();
     this.setupSignalRSubscriptions();
   }
@@ -400,21 +464,27 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   private loadCounts(pods: Pod[]) {
-    const requests = pods
-      .filter((p) => (p.status?.phase === 'Running' || p.status?.phase === 'Failed') && !!p.metadata.name)
-      .map((p) => {
-        const ns = p.metadata.namespace ?? '';
-        const name = p.metadata.name ?? '';
-        const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns)}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
-        return this.http.get<LogCounts>(url).pipe(
-          catchError(() => of({ error: 0, warning: 0 })),
-        );
-      });
-    if (requests.length === 0) return;
+    const enabled = this.enabledCountKeys();
+    if (enabled.size === 0) return;
+    const eligible = pods.filter((p) => {
+      if (!p.metadata.name) return false;
+      if (p.status?.phase !== 'Running' && p.status?.phase !== 'Failed') return false;
+      const key = `${p.metadata.namespace}/${p.metadata.name}`;
+      return enabled.has(key);
+    });
+    if (eligible.length === 0) return;
+
+    const requests = eligible.map((p) => {
+      const ns = p.metadata.namespace ?? '';
+      const name = p.metadata.name ?? '';
+      const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns)}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
+      return this.http.get<LogCounts>(url).pipe(
+        catchError(() => of({ error: 0, warning: 0 })),
+      );
+    });
 
     forkJoin(requests).pipe(takeUntil(this.destroy$)).subscribe((results) => {
       const map: Record<string, LogCounts> = { ...this.countsMap() };
-      const eligible = pods.filter((p) => p.status?.phase === 'Running' || p.status?.phase === 'Failed');
       eligible.forEach((p, i) => {
         const key = `${p.metadata.namespace}/${p.metadata.name}`;
         map[key] = results[i];
@@ -525,6 +595,10 @@ export class WPodsComponent implements OnInit, OnDestroy {
       return `${(millicores / 1000).toFixed(1)}`;
     }
     return `${millicores}m`;
+  }
+
+  openPodDetails(pod: Pod) {
+    this.modalService.openComponent(PodDetailsModalComponent, { data: { pod } });
   }
 
   formatMemory(bytes: number): string {

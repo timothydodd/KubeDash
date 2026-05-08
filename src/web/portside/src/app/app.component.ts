@@ -1,12 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterModule, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { SignalRService } from './_services/api/signalr.service';
+import { ClusterStripComponent } from './_components/cluster-strip/cluster-strip.component';
+import { ConnectionStatusComponent } from './_components/connection-status/connection-status.component';
+import { UserMenuComponent } from './_components/user-menu/user-menu.component';
 import { DynamicBackgroundDirective } from './_directives/dynamic-background';
 import { EffectBackgroundDirective } from './_directives/effect-background';
-import { UserMenuComponent } from './_components/user-menu/user-menu.component';
-import { ConnectionStatusComponent } from './_components/connection-status/connection-status.component';
-import { ClusterStripComponent } from './_components/cluster-strip/cluster-strip.component';
+import { SignalRService } from './_services/api/signalr.service';
 import { AuthService } from './_services/auth-service';
 
 @Component({
@@ -28,9 +28,9 @@ import { AuthService } from './_services/auth-service';
       <div class="content-wrapper" appEffectBackground>
         <header class="app-header">
           <span class="app-logo" aria-hidden="true">
-            <img src="assets/logo-64.png" alt="" />
+            <img src="assets/logo.png" alt="" />
           </span>
-          <h1>Portside</h1>
+
           <span class="subtitle">Kubernetes Dashboard</span>
           <nav class="app-nav">
             <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">

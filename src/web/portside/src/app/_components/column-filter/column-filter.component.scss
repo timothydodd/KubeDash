@@ -1,0 +1,140 @@
+.col-filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--foreground-muted);
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+    lucide-icon { width: 12px; height: 12px; }
+
+    &:hover {
+      color: var(--foreground);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.active {
+      color: var(--primary, #bd93f9);
+      border-color: currentColor;
+      background: rgba(189, 147, 249, 0.1);
+    }
+  }
+}
+
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 50;
+
+  &.align-end {
+    left: auto;
+    right: 0;
+  }
+  width: 260px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated, var(--surface));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  // Headers are uppercased / tracked — reset for the popover body
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: normal;
+  color: var(--foreground);
+  cursor: default;
+}
+
+.filter-header {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+
+  input {
+    width: 100%;
+    height: 28px;
+    padding: 0 10px;
+    background: var(--input-bg, var(--surface-variant));
+    color: var(--on-surface, var(--foreground));
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    outline: none;
+
+    &:focus { border-color: var(--primary, #bd93f9); }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-color);
+
+  button {
+    flex: 1;
+    height: 24px;
+    background: transparent;
+    color: var(--foreground-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--foreground);
+      border-color: var(--primary, #bd93f9);
+    }
+  }
+}
+
+.filter-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+
+  &:hover { background: rgba(255, 255, 255, 0.04); }
+
+  input[type="checkbox"] {
+    flex-shrink: 0;
+    accent-color: var(--primary, #bd93f9);
+    cursor: pointer;
+  }
+
+  .filter-item-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.filter-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--foreground-muted);
+  font-size: 0.8rem;
+}

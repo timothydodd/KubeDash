@@ -169,6 +169,17 @@
   }
 }
 
+.pods-table th {
+  .th-label {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  app-column-filter {
+    vertical-align: middle;
+  }
+}
+
 .pods-table th.sortable {
   cursor: pointer;
   user-select: none;
@@ -260,6 +271,10 @@
 }
 
 .pod-row {
+  &.clickable {
+    cursor: pointer;
+  }
+
   // Status-based styling
   &.status-running {
     border-left: 3px solid var(--k8s-running);

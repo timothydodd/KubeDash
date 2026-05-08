@@ -27,32 +27,67 @@
     --rd-border-radius-sm: 4px;
     --rd-border-radius-lg: 12px;
 
-    // Core Dracula theme colors
+    // Brand neon palette
+    --brand-pink:     #FF4FD8;
+    --brand-magenta:  #E236C2;
+    --brand-violet:   #8A5CFF;
+    --brand-electric: #49A7FF;
+    --brand-cyan:     #3EF2FF;
+
+    // RGB triples for rgba() composition (transparent variants)
+    --brand-pink-rgb:     255, 79, 216;
+    --brand-magenta-rgb:  226, 54, 194;
+    --brand-violet-rgb:   138, 92, 255;
+    --brand-electric-rgb:  73, 167, 255;
+    --brand-cyan-rgb:      62, 242, 255;
+
+    // Core theme colors
     --background: #282a36;
     --current-line: #44475a;
     --foreground: #f8f8f2;
     --comment: #6272a4;
-    --cyan: #7df9ff;
-    --green: #50fa7b;
+    --cyan:   var(--brand-cyan);
+    --green:  #50fa7b;
     --orange: #ffb86c;
-    --pink: #ff79c6;
-    --purple: #bd93f9;
-    --red: #ff5555;
+    --pink:   var(--brand-pink);
+    --purple: var(--brand-violet);
+    --red:    #ff5555;
     --yellow: #f1fa8c;
-    
+
     // Background variations
     --bGLighter: #424450;
     --bGLight: #343746;
     --bGDark: #21222C;
     --bGDarker: #191A21;
-    
-    // Semantic color system
-    --primary: #3B82F6;
+
+    // Semantic color system — primary = violet, info = cyan glow
+    --primary: var(--brand-violet);
+    --primary-rgb: var(--brand-violet-rgb);
+    --primary-soft:  rgba(138, 92, 255, 0.18);
+    --primary-glow:  rgba(138, 92, 255, 0.45);
+    --primary-hover: var(--brand-electric);
+
+    // Companion accents (transparent variants for glows / overlays)
+    --accent-pink-soft:     rgba(255, 79, 216, 0.18);
+    --accent-pink-glow:     rgba(255, 79, 216, 0.45);
+    --accent-magenta-soft:  rgba(226, 54, 194, 0.18);
+    --accent-magenta-glow:  rgba(226, 54, 194, 0.45);
+    --accent-electric-soft: rgba(73, 167, 255, 0.18);
+    --accent-electric-glow: rgba(73, 167, 255, 0.45);
+    --accent-cyan-soft:     rgba(62, 242, 255, 0.18);
+    --accent-cyan-glow:     rgba(62, 242, 255, 0.45);
+
+    // Component-facing accent aliases
+    --accent-blue:   var(--brand-electric);
+    --accent-cyan:   var(--brand-cyan);
+    --accent-purple: var(--brand-violet);
+    --accent-pink:   var(--brand-pink);
+
     --secondary: #6272a4;
     --success: #50fa7b;
     --danger: #ff5555;
     --warning: #f1fa8c;
-    --info: #7df9ff;
+    --info: var(--brand-cyan);
     --light: #f8f8f2;
     --dark: #282a36;
     
@@ -82,15 +117,15 @@
     // Border and outline colors
     --border-color: #44475a;
     --border-color-light: #565872;
-    --border-color-hover: rgba(139, 233, 253, 0.35);
+    --border-color-hover: rgba(62, 242, 255, 0.4);
     --widget-border: #44475a;
-    --outline-color: #3B82F6;
+    --outline-color: var(--brand-violet);
     --divider-color: #44475a;
-    
+
     // State colors
     --hover-bg: #424450;
     --active-bg: #4d5066;
-    --focus-ring: rgba(59, 130, 246, 0.3);
+    --focus-ring: rgba(138, 92, 255, 0.35);
     --disabled-bg: #2a2c3a;
     --disabled-text: #6b6b7b;
     
@@ -108,13 +143,13 @@
     --warning-border: rgba(241, 250, 140, 0.3);
     --warning-text: #f1fa8c;
     
-    --info-bg: rgba(125, 249, 255, 0.15);
-    --info-border: rgba(125, 249, 255, 0.3);
-    --info-text: #7df9ff;
-    
+    --info-bg: rgba(62, 242, 255, 0.12);
+    --info-border: rgba(62, 242, 255, 0.35);
+    --info-text: var(--brand-cyan);
+
     // Legacy compatibility
     --font-color: #f8f8f2;
-    --hover-color: #3B82F6;
+    --hover-color: var(--brand-electric);
 }
 
 // Color system
@@ -186,7 +221,7 @@ $danger-dark: $red-dark;
 @mixin focus-ring($color: var(--primary)) {
   outline: none;
   border-color: $color;
-  box-shadow: 0 0 0 0.2rem rgba(189, 147, 249, 0.3);
+  box-shadow: 0 0 0 0.2rem var(--focus-ring);
 }
 
 @mixin button-base {

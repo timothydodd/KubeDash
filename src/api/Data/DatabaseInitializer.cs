@@ -35,5 +35,6 @@ public class DatabaseInitializer
             _logger.LogInformation("Seeded default admin user (username: admin / password: admin)");
         }
         db.CreateTableIfNotExists<RefreshToken>(true);
+        db.CreateTableIfNotExists<UserPreference>(true);
     }
 }
