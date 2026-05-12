@@ -12,7 +12,7 @@ import { AuthService } from '../../_services/auth-service';
       <div class="login-form">
         <div class="text-center mb-4">
           <img src="assets/logo.png" alt="Portside" class="logo mb-3" />
-          <h2 style="color: var(--on-surface); margin: 0;">Login to Portside</h2>
+          <h2 style="color: var(--on-surface); margin: 0; font-size: 0.95rem; font-weight: 500; letter-spacing: 0.02em;">Login to Portside</h2>
         </div>
         
         <form (ngSubmit)="login()" #loginForm="ngForm">

@@ -18,6 +18,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
     private readonly IMemoryCache _memoryCache;
     private readonly KubernetesDashboardHubService _dashboardHubService;
     private readonly IKubernetes _kubernetesClient;
+    private readonly PodMonitorService _podMonitor;
     private readonly ILogger<ClusterWatchManager> _logger;
 
     private readonly object _gate = new();
@@ -33,12 +34,14 @@ public sealed class ClusterWatchManager : IAsyncDisposable
         IMemoryCache memoryCache,
         KubernetesDashboardHubService dashboardHubService,
         IKubernetes kubernetesClient,
+        PodMonitorService podMonitor,
         ILogger<ClusterWatchManager> logger)
     {
         _kubernetesService = kubernetesService;
         _memoryCache = memoryCache;
         _dashboardHubService = dashboardHubService;
         _kubernetesClient = kubernetesClient;
+        _podMonitor = podMonitor;
         _logger = logger;
     }
 
@@ -80,6 +83,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
         _watchNodesTask = Task.Run(() => WatchNodes(token), token);
         _watchPodsTask = Task.Run(() => WatchPods(token), token);
         _watchEventsTask = Task.Run(() => WatchEvents(token), token);
+        _podMonitor.Start();
     }
 
     private void StopWatchers_Locked()
@@ -88,6 +92,7 @@ public sealed class ClusterWatchManager : IAsyncDisposable
         _cts?.Dispose();
         _cts = null;
         _metricsTask = _watchNodesTask = _watchPodsTask = _watchEventsTask = null;
+        _podMonitor.Stop();
     }
 
     private async Task MetricsLoop(CancellationToken stoppingToken)

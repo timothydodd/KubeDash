@@ -36,8 +36,12 @@ import { ClickOutsideDirective } from '../../_services/click-outside.directive';
           <div class="dropdown-divider"></div>
 
           <div class="dropdown-menu-items">
-            <button class="dropdown-item" (click)="changePassword()">
+            <button class="dropdown-item" (click)="openSettings()">
               <lucide-icon name="settings" size="16"></lucide-icon>
+              <span>Monitoring Settings</span>
+            </button>
+            <button class="dropdown-item" (click)="changePassword()">
+              <lucide-icon name="shield" size="16"></lucide-icon>
               <span>Change Password</span>
             </button>
             <button class="dropdown-item logout" (click)="logOut()">
@@ -73,6 +77,11 @@ export class UserMenuComponent {
   changePassword() {
     this.isOpen.set(false);
     this.router.navigate(['/change-password']);
+  }
+
+  openSettings() {
+    this.isOpen.set(false);
+    this.router.navigate(['/settings']);
   }
 
   logOut() {

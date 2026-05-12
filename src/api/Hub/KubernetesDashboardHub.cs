@@ -86,4 +86,5 @@ public class KubernetesDashboardHubService
     {
         await _hubContext.Clients.Group($"cluster-{clusterId}").SendAsync("EventUpdate", eventData);
     }
+
 }

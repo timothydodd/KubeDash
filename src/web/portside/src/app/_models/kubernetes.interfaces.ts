@@ -66,6 +66,12 @@ export interface Pod extends KubernetesObject {
   spec: PodSpec;
   status?: PodStatus;
   metrics?: PodMetrics;
+  counts?: PodCounts;
+}
+
+export interface PodCounts {
+  error: number;
+  warning: number;
 }
 
 export interface PodSpec {
@@ -177,6 +183,7 @@ export interface PodMetrics {
   memory?: number;     // Memory usage in bytes
   memoryPercent?: number; // Memory usage percentage
   containers?: ContainerMetrics[];
+  history?: number[];  // recent CPU% samples, oldest -> newest
 }
 
 export interface ContainerMetrics {

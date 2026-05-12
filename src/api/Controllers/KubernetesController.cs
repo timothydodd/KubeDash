@@ -14,17 +14,20 @@ public class KubernetesController : ControllerBase
     private readonly KubernetesService _kubernetesService;
     private readonly IKubernetes _kubernetesClient;
     private readonly IMemoryCache _cache;
+    private readonly PodMonitorService _podMonitor;
     private readonly ILogger<KubernetesController> _logger;
 
     public KubernetesController(
-        KubernetesService kubernetesService, 
+        KubernetesService kubernetesService,
         IKubernetes kubernetesClient,
         IMemoryCache cache,
+        PodMonitorService podMonitor,
         ILogger<KubernetesController> logger)
     {
         _kubernetesService = kubernetesService;
         _kubernetesClient = kubernetesClient;
         _cache = cache;
+        _podMonitor = podMonitor;
         _logger = logger;
     }
 
@@ -144,55 +147,78 @@ public class KubernetesController : ControllerBase
                     metricsDict[key] = podMetric;
                 }
 
-                // Enhance pod objects with metrics
+                // Enhance pod objects with metrics, plus monitor-cached counts + CPU history.
+                var cachedMetrics = _podMonitor.CurrentMetrics;
+                var cachedCounts = _podMonitor.CurrentCounts;
+
                 var enhancedPods = pods.Items.Select(pod =>
                 {
                     var podKey = $"{pod.Metadata.NamespaceProperty}/{pod.Metadata.Name}";
-                    object metrics = null;
-                    
-                    if (metricsDict.ContainsKey(podKey))
+                    object? metrics = null;
+
+                    // Prefer the monitor's cached metrics (already includes percentages),
+                    // fall back to a fresh metrics-server read so things work even when
+                    // monitoring is disabled.
+                    if (cachedMetrics.TryGetValue(podKey, out var cached))
+                    {
+                        metrics = new
+                        {
+                            cpu = cached.Cpu,
+                            memory = cached.Memory,
+                            cpuPercent = cached.CpuPercent,
+                            memoryPercent = cached.MemoryPercent,
+                            history = _podMonitor.GetCpuHistoryDownsampled(podKey, 30),
+                        };
+                    }
+                    else if (metricsDict.ContainsKey(podKey))
                     {
                         var podMetrics = metricsDict[podKey];
                         var nodeName = pod.Spec?.NodeName;
-                        
-                        // Calculate percentages if we have node capacity info
+
                         double? cpuPercent = null;
                         double? memoryPercent = null;
-                        
+
                         if (!string.IsNullOrEmpty(nodeName) && nodeCapacityDict.ContainsKey(nodeName))
                         {
                             var nodeCapacity = nodeCapacityDict[nodeName];
-                            
+
                             if (podMetrics.ContainsKey("cpu") && nodeCapacity.cpuCores > 0)
                             {
-                                var podCpuCores = (double)podMetrics["cpu"] / 1000; // Convert millicores to cores
+                                var podCpuCores = (double)podMetrics["cpu"] / 1000;
                                 cpuPercent = Math.Round((podCpuCores / nodeCapacity.cpuCores) * 100, 1);
                             }
-                            
+
                             if (podMetrics.ContainsKey("memory") && nodeCapacity.memoryBytes > 0)
                             {
                                 var podMemoryBytes = (double)podMetrics["memory"];
                                 memoryPercent = Math.Round((podMemoryBytes / nodeCapacity.memoryBytes) * 100, 1);
                             }
                         }
-                        
+
                         metrics = new
                         {
                             cpu = podMetrics["cpu"],
                             memory = podMetrics["memory"],
                             cpuPercent = cpuPercent,
-                            memoryPercent = memoryPercent
+                            memoryPercent = memoryPercent,
+                            history = _podMonitor.GetCpuHistoryDownsampled(podKey, 30),
                         };
                     }
-                    
-                    var result = new
+
+                    object? counts = null;
+                    if (cachedCounts.TryGetValue(podKey, out var cnt))
+                    {
+                        counts = new { error = cnt.Error, warning = cnt.Warning };
+                    }
+
+                    return new
                     {
                         metadata = pod.Metadata,
                         spec = pod.Spec,
                         status = pod.Status,
-                        metrics = metrics
+                        metrics = metrics,
+                        counts = counts,
                     };
-                    return result;
                 }).ToList();
 
                 return Ok(enhancedPods);

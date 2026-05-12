@@ -28,7 +28,7 @@ import { AuthService } from './_services/auth-service';
       <div class="content-wrapper" appEffectBackground>
         <header class="app-header">
           <span class="app-logo" aria-hidden="true">
-            <img src="assets/logo.png" alt="" />
+            <img src="assets/logo-64.png" alt="" width="32" height="32" />
           </span>
 
           <span class="subtitle">Kubernetes Dashboard</span>

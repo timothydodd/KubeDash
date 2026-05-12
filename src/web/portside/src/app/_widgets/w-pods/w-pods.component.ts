@@ -1,16 +1,12 @@
 import { Component, OnInit, OnDestroy, effect, signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
-import { LoadingSpinnerComponent } from '../../_components/loading-spinner/loading-spinner.component';
 import { FlashLabelComponent } from '../../_components/flash-label/flash-label.component';
 import { LucideAngularModule } from 'lucide-angular';
-import { Pod } from '../../_models/kubernetes.interfaces';
-import { environment } from '../../../environments/environment';
-import { UserPreferencesService } from '../../_services/user-preferences.service';
+import { Pod, PodMetrics } from '../../_models/kubernetes.interfaces';
 import { ModalContainerService } from '@rd-ui';
 import { PodDetailsModalComponent } from '../../_components/pod-details-modal/pod-details-modal.component';
 import { ColumnFilterComponent, ColumnFilterItem } from '../../_components/column-filter/column-filter.component';
@@ -37,13 +33,42 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LoadingSpinnerComponent, LucideAngularModule, RouterLink, FormsModule, FlashLabelComponent, ColumnFilterComponent],
+  imports: [LucideAngularModule, RouterLink, FormsModule, FlashLabelComponent, ColumnFilterComponent],
   template: `
     <div class="pods-widget">
       @if (loading() && pods().length === 0) {
-        <div class="loading-state">
-          <app-loading-spinner />
-          <p>Loading pods...</p>
+        <div class="pods-content skeleton" aria-busy="true" aria-label="Loading pods">
+          <div class="pods-toolbar">
+            <div class="search skeleton-bar skeleton-bar-wide"></div>
+            <span class="skeleton-bar skeleton-bar-short"></span>
+          </div>
+          <div class="pods-table-container">
+            <table class="pods-table">
+              <thead>
+                <tr>
+                  @for (col of skeletonColumns; track col) {
+                    <th><span class="skeleton-bar skeleton-bar-th"></span></th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of skeletonRows; track row) {
+                  <tr class="pod-row skeleton-row">
+                    <td><span class="skeleton-bar skeleton-bar-name"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-pill"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-pill"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-tiny"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-metric"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-metric"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-medium"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-tiny"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-short"></span></td>
+                    <td><span class="skeleton-bar skeleton-bar-button"></span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       } @else if (error()) {
         <div class="error-state">
@@ -111,20 +136,21 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
                     </th>
                     <th class="sortable" (click)="setSort('errors')">
                       <span class="th-label">24h Errors {{ sortIndicator('errors') }}</span>
-                      <app-column-filter
-                        label="Pods to track counts for"
-                        searchPlaceholder="Search pods..."
-                        align="end"
-                        [items]="countsItems()"
-                        [selected]="enabledCountKeys()"
-                        (selectionChange)="onCountsFilter($event)" />
+                      <a class="settings-link"
+                         [routerLink]="['/settings']"
+                         title="Configure monitoring (backend pushes these counts; opt pods out in Settings)"
+                         (click)="$event.stopPropagation()">
+                        <lucide-icon name="settings" />
+                      </a>
                     </th>
-                    <th><span class="th-label">Logs</span></th>
+                    <th><span class="th-label">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (pod of filteredPods(); track pod.metadata.namespace + '/' + pod.metadata.name) {
-                    <tr class="pod-row clickable" [class]="getPodStatusClass(pod)" (click)="openPodDetails(pod)">
+                    <tr class="pod-row clickable" [class]="getPodStatusClass(pod)"
+                        title="Open logs"
+                        (click)="goToLogs(pod)">
                       <td class="pod-name-cell">
                         <span class="pod-name">{{ pod.metadata.name }}</span>
                       </td>
@@ -148,22 +174,34 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
                         }
                       </td>
                       <td class="cpu-cell">
-                        @if (pod.metrics && pod.metrics.cpuPercent !== undefined) {
+                        @let m = getMetrics(pod);
+                        @if (m && m.cpuPercent !== undefined && m.cpuPercent !== null) {
                           <div class="resource-info">
                             <lucide-icon name="cpu" />
-                            <span>{{ pod.metrics.cpuPercent }}%</span>
+                            <span>{{ m.cpuPercent }}%</span>
+                            <svg class="sparkline" viewBox="0 0 60 20" preserveAspectRatio="none"
+                                 [attr.aria-label]="'CPU history for ' + pod.metadata.name">
+                              @let hist = cpuSparkline(pod);
+                              @if (hist.area) {
+                                <path class="spark-area" [attr.d]="hist.area" />
+                              }
+                              @if (hist.line) {
+                                <path class="spark-line" [attr.d]="hist.line" />
+                              }
+                            </svg>
                           </div>
                         } @else {
                           <span class="muted">-</span>
                         }
                       </td>
                       <td class="memory-cell">
-                        @if (pod.metrics && pod.metrics.memory !== undefined) {
+                        @let mm = getMetrics(pod);
+                        @if (mm && mm.memory !== undefined && mm.memory !== null) {
                           <div class="resource-info">
                             <lucide-icon name="memory-stick" />
-                            <span>{{ formatMemory(pod.metrics.memory) }}</span>
-                            @if (pod.metrics.memoryPercent !== undefined) {
-                              <span class="resource-percent">({{ pod.metrics.memoryPercent }}%)</span>
+                            <span>{{ formatMemory(mm.memory) }}</span>
+                            @if (mm.memoryPercent !== undefined && mm.memoryPercent !== null) {
+                              <span class="resource-percent">({{ mm.memoryPercent }}%)</span>
                             }
                           </div>
                         } @else {
@@ -188,36 +226,35 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
                       </td>
                       <td class="counts-cell">
                         @let counts = getCounts(pod);
-                        @if (counts) {
+                        @if (counts && (counts.error > 0 || counts.warning > 0)) {
                           <div class="counts-info">
                             @if (counts.error > 0) {
-                              <span class="count-pill error" title="Errors in last 24h">
+                              <button type="button"
+                                      class="count-pill error"
+                                      title="View errors in logs"
+                                      (click)="goToLogs(pod, 'Error'); $event.stopPropagation()">
                                 <lucide-icon name="x-circle" /> {{ counts.error }}
-                              </span>
+                              </button>
                             }
                             @if (counts.warning > 0) {
-                              <span class="count-pill warning" title="Warnings in last 24h">
+                              <button type="button"
+                                      class="count-pill warning"
+                                      title="View warnings in logs"
+                                      (click)="goToLogs(pod, 'Warning'); $event.stopPropagation()">
                                 <lucide-icon name="alert-circle" /> {{ counts.warning }}
-                              </span>
-                            }
-                            @if (counts.error === 0 && counts.warning === 0) {
-                              <span class="count-pill ok" title="No errors/warnings in 24h">
-                                <lucide-icon name="check-circle" /> 0
-                              </span>
+                              </button>
                             }
                           </div>
-                        } @else {
-                          <span class="muted">-</span>
                         }
                       </td>
-                      <td class="logs-cell">
-                        <a class="logs-btn"
-                           [routerLink]="['/logs']"
-                           [queryParams]="{ namespace: pod.metadata.namespace, pod: pod.metadata.name }"
-                           title="View logs"
-                           (click)="$event.stopPropagation()">
-                          <lucide-icon name="server" />
-                        </a>
+                      <td class="actions-cell">
+                        <button type="button"
+                                class="details-btn"
+                                title="View pod details"
+                                (click)="openPodDetails(pod); $event.stopPropagation()">
+                          <lucide-icon name="info" />
+                          <span>Details</span>
+                        </button>
                       </td>
                     </tr>
                   }
@@ -235,14 +272,15 @@ export class WPodsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private kubernetesApi = inject(KubernetesApiService);
   private signalRService = inject(SignalRService);
-  private http = inject(HttpClient);
-  private userPrefs = inject(UserPreferencesService);
   private modalService = inject(ModalContainerService);
+  private router = inject(Router);
 
   loading = signal(true);
   error = signal<string | null>(null);
   pods = signal<Pod[]>([]);
-  countsMap = signal<Record<string, LogCounts>>({});
+
+  readonly skeletonRows = Array.from({ length: 8 }, (_, i) => i);
+  readonly skeletonColumns = Array.from({ length: 10 }, (_, i) => i);
 
   // Filters / sort state
   searchText = signal<string>('');
@@ -251,8 +289,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
   sortKey = signal<SortKey>('name');
   sortDir = signal<SortDir>('asc');
 
-  // Header-filter inputs
-  enabledCountKeys = computed(() => this.userPrefs.podCountsEnabled());
 
   namespaceItems = computed<ColumnFilterItem[]>(() => {
     const set = new Set<string>();
@@ -265,15 +301,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
     this.pods().forEach((p) => p.status?.phase && set.add(p.status.phase));
     return Array.from(set).sort().map((s) => ({ label: s, value: s }));
   });
-
-  countsItems = computed<ColumnFilterItem[]>(() =>
-    this.pods()
-      .map((p) => ({
-        label: `${p.metadata.namespace}/${p.metadata.name}`,
-        value: `${p.metadata.namespace}/${p.metadata.name}`,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label)),
-  );
 
   // Selected sets shown by the column-filter (items minus excluded)
   namespaceSelected = computed<Set<string>>(() => {
@@ -318,10 +345,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
     this.excludedStatuses.set(new Set(all.filter((v) => !selected.has(v))));
   }
 
-  onCountsFilter(selected: Set<string>) {
-    this.userPrefs.setPodCountsEnabled(Array.from(selected));
-  }
-
   setSort(key: SortKey) {
     if (this.sortKey() === key) {
       this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
@@ -344,11 +367,17 @@ export class WPodsComponent implements OnInit, OnDestroy {
         return (a.metadata.namespace ?? '').localeCompare(b.metadata.namespace ?? '');
       case 'status':
         return (a.status?.phase ?? '').localeCompare(b.status?.phase ?? '');
-      case 'cpu':
-        return (a.metrics?.cpuPercent ?? -1) - (b.metrics?.cpuPercent ?? -1);
-      case 'memory':
-        return (a.metrics?.memoryPercent ?? a.metrics?.memory ?? -1) -
-               (b.metrics?.memoryPercent ?? b.metrics?.memory ?? -1);
+      case 'cpu': {
+        const ma = this.getMetrics(a);
+        const mb = this.getMetrics(b);
+        return (ma?.cpuPercent ?? -1) - (mb?.cpuPercent ?? -1);
+      }
+      case 'memory': {
+        const ma = this.getMetrics(a);
+        const mb = this.getMetrics(b);
+        return ((ma?.memoryPercent ?? ma?.memory ?? -1) as number) -
+               ((mb?.memoryPercent ?? mb?.memory ?? -1) as number);
+      }
       case 'age':
         return new Date(a.metadata.creationTimestamp ?? 0).getTime() -
                new Date(b.metadata.creationTimestamp ?? 0).getTime();
@@ -361,8 +390,37 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   getCounts(pod: Pod): LogCounts | null {
-    const key = `${pod.metadata.namespace}/${pod.metadata.name}`;
-    return this.countsMap()[key] ?? null;
+    return pod.counts ?? null;
+  }
+
+  cpuSparkline(pod: Pod): { line: string | null; area: string | null } {
+    const series = pod.metrics?.history;
+    if (!series || series.length < 2) return { line: null, area: null };
+
+    const w = 60;
+    const h = 20;
+    const pad = 1;
+    // Scale Y to the visible range so even small fluctuations are readable,
+    // but pin the floor at 0 so flat-low pods don't appear noisy.
+    const max = Math.max(...series, 1);
+    const min = 0;
+    const range = max - min || 1;
+    const stepX = series.length > 1 ? (w - pad * 2) / (series.length - 1) : 0;
+
+    const points = series.map((v, i) => {
+      const x = pad + i * stepX;
+      const y = pad + (h - pad * 2) * (1 - (v - min) / range);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    const line = `M${points.join(' L')}`;
+    const first = points[0].split(',')[0];
+    const last = points[points.length - 1].split(',')[0];
+    const area = `M${first},${h} L${points.join(' L')} L${last},${h} Z`;
+    return { line, area };
+  }
+
+  getMetrics(pod: Pod): PodMetrics | null {
+    return pod.metrics ?? null;
   }
 
   // Computed properties for statistics
@@ -381,24 +439,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
   constructor() {
     this.restoreFilters();
     effect(() => this.persistFilters());
-
-    // Re-fetch counts whenever the opt-in selection changes (and pods are loaded)
-    effect(() => {
-      const enabled = this.enabledCountKeys();
-      const pods = this.pods();
-      if (pods.length === 0) return;
-      // Drop counts for pods that are no longer opted-in
-      const map = { ...this.countsMap() };
-      let changed = false;
-      for (const key of Object.keys(map)) {
-        if (!enabled.has(key)) {
-          delete map[key];
-          changed = true;
-        }
-      }
-      if (changed) this.countsMap.set(map);
-      if (enabled.size > 0) this.loadCounts(pods);
-    });
   }
 
   private restoreFilters() {
@@ -432,9 +472,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    if (!this.userPrefs.loaded()) {
-      this.userPrefs.load();
-    }
     this.loadPods();
     this.setupSignalRSubscriptions();
   }
@@ -454,7 +491,6 @@ export class WPodsComponent implements OnInit, OnDestroy {
         next: (pods) => {
           this.pods.set(pods);
           this.loading.set(false);
-          this.loadCounts(pods);
         },
         error: (err) => {
           this.error.set(err.message || 'Failed to load pods');
@@ -463,37 +499,9 @@ export class WPodsComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadCounts(pods: Pod[]) {
-    const enabled = this.enabledCountKeys();
-    if (enabled.size === 0) return;
-    const eligible = pods.filter((p) => {
-      if (!p.metadata.name) return false;
-      if (p.status?.phase !== 'Running' && p.status?.phase !== 'Failed') return false;
-      const key = `${p.metadata.namespace}/${p.metadata.name}`;
-      return enabled.has(key);
-    });
-    if (eligible.length === 0) return;
-
-    const requests = eligible.map((p) => {
-      const ns = p.metadata.namespace ?? '';
-      const name = p.metadata.name ?? '';
-      const url = `${environment.apiUrl}/api/log/counts?namespace=${encodeURIComponent(ns)}&pod=${encodeURIComponent(name)}&sinceSeconds=86400`;
-      return this.http.get<LogCounts>(url).pipe(
-        catchError(() => of({ error: 0, warning: 0 })),
-      );
-    });
-
-    forkJoin(requests).pipe(takeUntil(this.destroy$)).subscribe((results) => {
-      const map: Record<string, LogCounts> = { ...this.countsMap() };
-      eligible.forEach((p, i) => {
-        const key = `${p.metadata.namespace}/${p.metadata.name}`;
-        map[key] = results[i];
-      });
-      this.countsMap.set(map);
-    });
-  }
-
   private setupSignalRSubscriptions() {
+    // Pod lifecycle (Added/Modified/Deleted) keeps the list fresh; counts and metrics
+    // ride along on the pod object, refreshed each time getPods() runs.
     this.signalRService.podUpdate.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       if (!data?.pod) return;
       this.applyPodEvent(data.eventType, data.pod as Pod);
@@ -512,21 +520,12 @@ export class WPodsComponent implements OnInit, OnDestroy {
         const next = idx >= 0 ? [...current] : [...current, pod];
         if (idx >= 0) next[idx] = pod;
         this.pods.set(next);
-        if (pod.status?.phase === 'Running' || pod.status?.phase === 'Failed') {
-          this.loadCounts([pod]);
-        }
         break;
       }
       case 'Deleted': {
         if (idx >= 0) {
           const next = current.filter((_, i) => i !== idx);
           this.pods.set(next);
-          const key = `${pod.metadata.namespace}/${pod.metadata.name}`;
-          if (this.countsMap()[key]) {
-            const map = { ...this.countsMap() };
-            delete map[key];
-            this.countsMap.set(map);
-          }
         }
         break;
       }
@@ -599,6 +598,15 @@ export class WPodsComponent implements OnInit, OnDestroy {
 
   openPodDetails(pod: Pod) {
     this.modalService.openComponent(PodDetailsModalComponent, { data: { pod } });
+  }
+
+  goToLogs(pod: Pod, level?: 'Error' | 'Warning') {
+    const queryParams: Record<string, string> = {
+      namespace: pod.metadata.namespace ?? '',
+      pod: pod.metadata.name ?? '',
+    };
+    if (level) queryParams['levels'] = level;
+    this.router.navigate(['/logs'], { queryParams });
   }
 
   formatMemory(bytes: number): string {

@@ -107,8 +107,15 @@ export class ColumnFilterComponent {
   }
 
   selectAllVisible() {
-    const next = new Set(this.selected());
-    for (const i of this.visibleItems()) next.add(i.value);
+    const visible = this.visibleItems();
+    const sel = this.selected();
+    const allSelected = visible.length > 0 && visible.every((i) => sel.has(i.value));
+    const next = new Set(sel);
+    if (allSelected) {
+      for (const i of visible) next.delete(i.value);
+    } else {
+      for (const i of visible) next.add(i.value);
+    }
     this.selectionChange.emit(next);
   }
 

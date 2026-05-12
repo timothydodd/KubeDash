@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
@@ -43,13 +43,6 @@ const TIME_RANGES: TimeRange[] = [
   { label: 'All available', seconds: null },
 ];
 
-const STORAGE_KEY = 'portside:pod-logs-filters';
-interface PersistedFilters {
-  search?: string;
-  levels?: LogLevel[];
-  rangeSeconds?: number | null;
-  pod?: { namespace: string; name: string } | null;
-}
 
 @Component({
   selector: 'app-pod-logs-page',
@@ -272,14 +265,7 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  constructor() {
-    this.restoreFilters();
-
-    // Persist filters as the user changes them.
-    effect(() => {
-      this.persistFilters();
-    });
-  }
+  constructor() {}
 
   ngOnInit() {
     this.loadPods();
@@ -312,67 +298,23 @@ export class PodLogsPageComponent implements OnInit, OnDestroy {
     const params = this.route.snapshot.queryParamMap;
     const ns = params.get('namespace');
     const name = params.get('pod');
+    const levelsParam = params.get('levels');
 
-    // Query param wins over persisted selection.
+    if (levelsParam) {
+      const requested = levelsParam.split(',').map((s) => s.trim());
+      const valid = requested.filter((l): l is LogLevel =>
+        (LOG_LEVELS as readonly string[]).includes(l),
+      );
+      if (valid.length) this.selectedLevels.set(new Set(valid));
+    }
+
     if (name) {
       const match = this.pods().find((p) => p.name === name && (!ns || p.namespace === ns));
       if (match) {
         if (ns) this.selectedNamespace.set(ns);
         this.selectedPod.set(match);
         this.onPodChange();
-        return;
       }
-    }
-
-    // Otherwise restore the last-selected pod from localStorage if it's still around.
-    const persisted = this.readPersisted();
-    if (persisted?.pod) {
-      const match = this.pods().find(
-        (p) => p.name === persisted.pod!.name && p.namespace === persisted.pod!.namespace,
-      );
-      if (match) {
-        this.selectedPod.set(match);
-        this.onPodChange();
-      }
-    }
-  }
-
-  private readPersisted(): PersistedFilters | null {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as PersistedFilters) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  private restoreFilters() {
-    const p = this.readPersisted();
-    if (!p) return;
-    if (typeof p.search === 'string') this.search.set(p.search);
-    if (p.levels?.length) {
-      const valid = p.levels.filter((l): l is LogLevel => (LOG_LEVELS as readonly string[]).includes(l));
-      if (valid.length) this.selectedLevels.set(new Set(valid));
-    }
-    if (p.rangeSeconds !== undefined) {
-      const range = TIME_RANGES.find((r) => r.seconds === p.rangeSeconds);
-      if (range) this.selectedRange.set(range);
-    }
-    // Pod restoration happens in applyQueryParams once the pod list arrives.
-  }
-
-  private persistFilters() {
-    const pod = this.selectedPod();
-    const data: PersistedFilters = {
-      search: this.search(),
-      levels: Array.from(this.selectedLevels()),
-      rangeSeconds: this.selectedRange().seconds,
-      pod: pod ? { namespace: pod.namespace, name: pod.name } : null,
-    };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      /* quota exceeded or storage disabled - ignore */
     }
   }
 

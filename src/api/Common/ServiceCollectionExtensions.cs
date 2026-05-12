@@ -46,6 +46,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
         // Watchers are now lazy: ClusterWatchManager starts/stops them based on hub subscribers.
+        services.AddSingleton<MonitorSettingsService>();
+        services.AddSingleton<PodMonitorService>();
         services.AddSingleton<ClusterWatchManager>();
         return services;
     }

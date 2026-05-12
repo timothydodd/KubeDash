@@ -36,5 +36,6 @@ public class DatabaseInitializer
         }
         db.CreateTableIfNotExists<RefreshToken>(true);
         db.CreateTableIfNotExists<UserPreference>(true);
+        db.CreateTableIfNotExists<SystemSetting>(true);
     }
 }
