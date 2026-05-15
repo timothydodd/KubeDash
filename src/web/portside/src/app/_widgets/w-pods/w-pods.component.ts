@@ -4,7 +4,6 @@ import { Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { KubernetesApiService } from '../../_services/kubernetes.api';
 import { SignalRService } from '../../_services/api/signalr.service';
-import { FlashLabelComponent } from '../../_components/flash-label/flash-label.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { Pod, PodMetrics } from '../../_models/kubernetes.interfaces';
 import { ModalContainerService } from '@rd-ui';
@@ -33,7 +32,7 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
 @Component({
   selector: 'app-w-pods',
   standalone: true,
-  imports: [LucideAngularModule, RouterLink, FormsModule, FlashLabelComponent, ColumnFilterComponent],
+  imports: [LucideAngularModule, RouterLink, FormsModule, ColumnFilterComponent],
   template: `
     <div class="pods-widget">
       @if (loading() && pods().length === 0) {
@@ -211,7 +210,7 @@ const KNOWN_STATUSES = ['Running', 'Pending', 'Failed', 'Succeeded', 'Unknown'];
                       <td class="node-cell">
                         <div class="node-info">
                           <lucide-icon name="server" />
-                          <span>{{ pod.spec?.nodeName ?? 'Unscheduled' }}</span>
+                          <span>{{ pod.spec.nodeName ?? 'Unscheduled' }}</span>
                         </div>
                       </td>
                       <td class="age-cell">

@@ -1,0 +1,48 @@
+// Skeleton loading bars — shared across widgets.
+
+.skeleton-bar {
+  display: inline-block;
+  width: 100%;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+.skeleton-bar-th     { width: 60%;  height: 10px; opacity: 0.75; }
+.skeleton-bar-name   { width: 80%;  height: 12px; }
+.skeleton-bar-pill   { width: 70px; height: 18px; border-radius: 999px; }
+.skeleton-bar-tiny   { width: 28px; height: 12px; }
+.skeleton-bar-short  { width: 40px; height: 12px; }
+.skeleton-bar-medium { width: 90px; height: 12px; }
+.skeleton-bar-metric { width: 80px; height: 12px; }
+.skeleton-bar-wide   { width: 100%; }
+.skeleton-bar-button { width: 72px; height: 24px; border-radius: 8px; }
+
+// Stagger shimmer across consecutive rows so it doesn't march in lockstep.
+@for $i from 0 through 7 {
+  .skeleton-row:nth-child(#{$i + 1}) .skeleton-bar {
+    animation-delay: #{$i * 80}ms;
+  }
+}
+
+.skeleton-row td {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bar { animation: none; background: rgba(255, 255, 255, 0.08); }
+}

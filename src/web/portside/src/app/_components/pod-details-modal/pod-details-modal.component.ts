@@ -27,7 +27,7 @@ import { UserPreferencesService } from '../../_services/user-preferences.service
               </div>
               <div class="field">
                 <span class="label">Node</span>
-                <span class="value">{{ p.spec?.nodeName ?? 'Unscheduled' }}</span>
+                <span class="value">{{ p.spec.nodeName ?? 'Unscheduled' }}</span>
               </div>
               <div class="field">
                 <span class="label">Pod IP</span>
@@ -39,7 +39,7 @@ import { UserPreferencesService } from '../../_services/user-preferences.service
               </div>
               <div class="field">
                 <span class="label">Service Account</span>
-                <span class="value">{{ p.spec?.serviceAccountName ?? 'default' }}</span>
+                <span class="value">{{ p.spec.serviceAccountName ?? 'default' }}</span>
               </div>
               <div class="field">
                 <span class="label">Created</span>

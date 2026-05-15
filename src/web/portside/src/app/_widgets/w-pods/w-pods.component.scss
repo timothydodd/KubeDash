@@ -63,61 +63,11 @@
   }
 }
 
-// --- Skeleton loading state -------------------------------------------------
-.pods-content.skeleton {
-  .pods-toolbar .search.skeleton-bar {
-    height: 32px;
-    max-width: 280px;
-    flex: 1;
-  }
-
-  .skeleton-row td {
-    padding-top: 14px;
-    padding-bottom: 14px;
-  }
-
-  // Slight stagger across rows so the shimmer doesn't march in lockstep.
-  @for $i from 0 through 7 {
-    .skeleton-row:nth-child(#{$i + 1}) .skeleton-bar {
-      animation-delay: #{$i * 80}ms;
-    }
-  }
-}
-
-.skeleton-bar {
-  display: inline-block;
-  width: 100%;
-  height: 12px;
-  border-radius: 4px;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0.12) 50%,
-      rgba(255, 255, 255, 0.04) 100%
-    );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-  vertical-align: middle;
-}
-
-.skeleton-bar-th     { width: 60%;  height: 10px; opacity: 0.75; }
-.skeleton-bar-name   { width: 80%;  height: 12px; }
-.skeleton-bar-pill   { width: 70px; height: 18px; border-radius: 999px; }
-.skeleton-bar-tiny   { width: 28px; height: 12px; }
-.skeleton-bar-short  { width: 40px; height: 12px; }
-.skeleton-bar-medium { width: 90px; height: 12px; }
-.skeleton-bar-metric { width: 80px; height: 12px; }
-.skeleton-bar-wide   { width: 100%; }
-.skeleton-bar-button { width: 72px; height: 24px; border-radius: 8px; }
-
-@keyframes skeleton-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeleton-bar { animation: none; background: rgba(255, 255, 255, 0.08); }
+// Skeleton-bar base styles live in styles/_skeleton.scss.
+.pods-content.skeleton .pods-toolbar .search.skeleton-bar {
+  height: 32px;
+  max-width: 280px;
+  flex: 1;
 }
 
 .loading-state, .error-state, .empty-state {
@@ -344,30 +294,12 @@
 }
 
 .pod-row {
-  &.clickable {
-    cursor: pointer;
-  }
-
-  // Status-based styling
-  &.status-running {
-    border-left: 3px solid var(--k8s-running);
-  }
-  
-  &.status-pending {
-    border-left: 3px solid var(--k8s-pending);
-  }
-  
-  &.status-failed {
-    border-left: 3px solid var(--k8s-failed);
-  }
-  
-  &.status-succeeded {
-    border-left: 3px solid var(--k8s-running);
-  }
-  
-  &.status-unknown {
-    border-left: 3px solid var(--k8s-unknown);
-  }
+  &.clickable { cursor: pointer; }
+  &.status-running,
+  &.status-succeeded { border-left: 3px solid var(--k8s-running); }
+  &.status-pending   { border-left: 3px solid var(--k8s-pending); }
+  &.status-failed    { border-left: 3px solid var(--k8s-failed); }
+  &.status-unknown   { border-left: 3px solid var(--k8s-unknown); }
 }
 
 .pod-name-cell {
@@ -388,36 +320,18 @@
   border: 1px solid var(--border-color);
 }
 
-.status-cell {
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    
-    .status-icon {
-      width: 16px;
-      height: 16px;
-    }
-    
-    .status-text {
-      font-weight: 500;
-      text-transform: capitalize;
-    }
-  }
-  
-  // Status-specific colors
-  .pod-row.status-running & .status-indicator {
-    color: var(--k8s-running);
-  }
-  
-  .pod-row.status-pending & .status-indicator {
-    color: var(--k8s-pending);
-  }
-  
-  .pod-row.status-failed & .status-indicator {
-    color: var(--k8s-failed);
-  }
+.status-cell .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .status-icon { width: 16px; height: 16px; }
+  .status-text { font-weight: 500; text-transform: capitalize; }
 }
+
+.pod-row.status-running .status-indicator { color: var(--k8s-running); }
+.pod-row.status-pending .status-indicator { color: var(--k8s-pending); }
+.pod-row.status-failed  .status-indicator { color: var(--k8s-failed); }
 
 .counts-cell {
   .counts-info {
@@ -609,36 +523,11 @@
   }
 }
 
-// Animation for status changes
-.status-indicator {
-  .status-icon {
-    animation: pulse 2s infinite;
-  }
-  
-  .pod-row.status-running & .status-icon {
-    animation: pulse-green 2s infinite;
-  }
-  
-  .pod-row.status-pending & .status-icon {
-    animation: pulse-yellow 2s infinite;
-  }
-  
-  .pod-row.status-failed & .status-icon {
-    animation: pulse-red 2s infinite;
-  }
+.status-indicator .status-icon {
+  animation: pod-status-pulse 2s infinite;
 }
 
-@keyframes pulse-green {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes pulse-yellow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes pulse-red {
+@keyframes pod-status-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
